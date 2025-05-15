@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from 'react';
-import { Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { Search, Plus, Edit, Trash2, Loader2 } from 'lucide-react';
 import { cn } from "@/lib/utils";
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import api from '@/lib/api';
 
-interface NoticeType {
+interface NoticeResponse {
   id: number;
   title: string;
   content: string;
@@ -14,58 +16,106 @@ interface NoticeType {
   author: {
     name: string;
   };
-  createdAt: string;
+  createdAt: string[];
 }
-
-interface NoticeListResponse {
-  content: NoticeType[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-}
-
-const formatDateTime = (dateString: string) => {
-  try {
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    
-    return {
-      date: `${year}-${month}-${day}`,
-      time: `${hours}:${minutes}:${seconds}`
-    };
-  } catch (error) {
-    return {
-      date: '날짜 없음',
-      time: '시간 없음'
-    };
-  }
-};
 
 export default function AdminNoticePage() {
-  const [page, setPage] = useState(0);
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
-  const size = 10;
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const { data, isLoading } = useQuery<NoticeListResponse>({
-    queryKey: ["notices", page, size],
+  const { data, isLoading, isFetching } = useQuery<NoticeResponse[]>({
+    queryKey: ["notices", searchTerm],
     queryFn: async () => {
-      const { data } = await api.get<NoticeListResponse>(`/notices?page=${page}&size=${size}`);
+      const params = new URLSearchParams(
+        searchTerm ? { search: searchTerm.trim() } : {}
+      );
+      const { data } = await api.get<NoticeResponse[]>(`/notices${params.toString() ? `?${params.toString()}` : ''}`);
       return data;
+    },
+    staleTime: 1000 * 60,
+  });
+
+  const { mutate: deleteNotice } = useMutation({
+    mutationFn: async (noticeId: number) => {
+      setIsDeleting(true);
+      try {
+        await api.delete(`/notices/${noticeId}`);
+      } catch (error) {
+        throw error;
+      } finally {
+        setIsDeleting(false);
+      }
+    },
+    onSuccess: () => {
+      toast.success("공지사항이 삭제되었습니다");
+      queryClient.invalidateQueries({ queryKey: ["notices"] });
+    },
+    onError: (error) => {
+      console.error('Delete notice error:', error);
+      toast.error("공지사항 삭제에 실패했습니다");
     }
   });
 
-  const notices = data?.content ?? [];
-  const filteredNotices = searchTerm
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: ["notices"] });
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, queryClient]);
+
+  const handleRowClick = useCallback((noticeId: number) => {
+    router.push(`/notices/${noticeId}`);
+  }, [router]);
+
+  const handleCreateClick = useCallback(() => {
+    router.push("/notices/new");
+  }, [router]);
+
+  const handleEditClick = useCallback((noticeId: number) => {
+    router.push(`/notices/${noticeId}/edit`);
+  }, [router]);
+
+  const handleDeleteClick = useCallback((noticeId: number) => {
+    if (isDeleting) return;
+
+    if (window.confirm("정말로 이 공지사항을 삭제하시겠습니까?")) {
+      deleteNotice(noticeId);
+    }
+  }, [deleteNotice, isDeleting]);
+
+  const handleSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  }, []);
+
+  const resetSearch = useCallback(() => {
+    setSearchTerm("");
+  }, []);
+
+  const formatDateTime = useCallback((dateArr: string[]) => {
+    if (!Array.isArray(dateArr) || dateArr.length < 6) {
+      return { date: "날짜 없음", time: "시간 없음" };
+    }
+
+    try {
+      const date = `${dateArr[0]}-${String(dateArr[1]).padStart(2, "0")}-${String(dateArr[2]).padStart(2, "0")}`;
+      const time = `${String(dateArr[3]).padStart(2, "0")}:${String(dateArr[4]).padStart(2, "0")}:${String(dateArr[5]).padStart(2, "0")}`;
+      return { date, time };
+    } catch (error) {
+      console.error('DateTime formatting error:', error);
+      return { date: "날짜 없음", time: "시간 없음" };
+    }
+  }, []);
+
+  const notices = data ?? [];
+  const isLoaderVisible = isLoading || isFetching || isDeleting;
+  const filteredNotices = searchTerm.trim()
     ? notices.filter(notice =>
-        notice.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        notice.content.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      notice.title.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
+      notice.content.toLowerCase().includes(searchTerm.toLowerCase().trim())
+    )
     : notices;
 
   return (
@@ -77,23 +127,39 @@ export default function AdminNoticePage() {
             공지사항을 관리하고 새로운 소식을 등록하세요
           </p>
         </div>
-        <button className="inline-flex items-center h-10 px-4 bg-[#4990FF] text-white rounded-lg text-sm font-medium hover:bg-[#4990FF]/90 transition-colors">
+        <button
+          onClick={handleCreateClick}
+          className="inline-flex items-center h-10 px-4 bg-[#4990FF] text-white rounded-lg text-sm font-medium hover:bg-[#4990FF]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isLoaderVisible}
+        >
           <Plus className="w-4 h-4 mr-1.5" />
           새 공지사항
         </button>
       </div>
 
       <div className="space-y-4">
-        <div className="relative w-full max-w-md">
-          <input
-            type="text"
-            placeholder="제목 또는 내용으로 검색"
-            className="w-full h-10 pl-10 pr-4 bg-white rounded-lg text-sm border border-gray-200
-                      focus:outline-none focus:ring-2 focus:ring-[#4990FF]/20 focus:border-[#4990FF]"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+        <div className="flex items-center gap-4">
+          <div className="relative w-full max-w-md">
+            <input
+              type="text"
+              placeholder="제목 또는 내용으로 검색"
+              className="w-full h-10 pl-10 pr-4 bg-white rounded-lg text-sm border border-gray-200
+                        focus:outline-none focus:ring-2 focus:ring-[#4990FF]/20 focus:border-[#4990FF]"
+              value={searchTerm}
+              onChange={handleSearch}
+              disabled={isLoaderVisible}
+            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          </div>
+          {searchTerm && (
+            <button
+              onClick={resetSearch}
+              className="text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50"
+              disabled={isLoaderVisible}
+            >
+              초기화
+            </button>
+          )}
         </div>
 
         <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
@@ -109,10 +175,10 @@ export default function AdminNoticePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {isLoading ? (
+                {isLoaderVisible ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                      로딩 중...
+                    <td colSpan={5} className="px-6 py-8 text-center">
+                      <Loader2 className="mx-auto animate-spin text-gray-400" size={36} />
                     </td>
                   </tr>
                 ) : filteredNotices.length === 0 ? (
@@ -123,17 +189,18 @@ export default function AdminNoticePage() {
                   </tr>
                 ) : (
                   filteredNotices.map((notice) => {
-                    const datetime = formatDateTime(notice.createdAt);
+                    const { date, time } = formatDateTime(notice.createdAt);
                     return (
-                      <tr 
+                      <tr
                         key={notice.id}
                         className="hover:bg-gray-50 transition-colors"
+                        onClick={() => handleRowClick(notice.id)}
                       >
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                           <span className={cn(
                             "inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium",
-                            notice.isPinned 
-                              ? "bg-red-50 text-red-600" 
+                            notice.isPinned
+                              ? "bg-red-50 text-red-600"
                               : "bg-gray-100 text-gray-600"
                           )}>
                             {notice.isPinned ? "고정" : "일반"}
@@ -141,7 +208,7 @@ export default function AdminNoticePage() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="space-y-1">
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-gray-900 group-hover:text-[#4990FF]">
                               {notice.title}
                             </div>
                             <div className="text-sm text-gray-500 line-clamp-1">
@@ -156,16 +223,32 @@ export default function AdminNoticePage() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-col">
-                            <span className="text-sm text-gray-900">{datetime.date}</span>
-                            <span className="text-xs text-gray-500">{datetime.time}</span>
+                            <span className="text-sm text-gray-900">{date}</span>
+                            <span className="text-xs text-gray-500">{time}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-right">
+                        <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end space-x-2">
-                            <button className="p-1 text-gray-400 hover:text-[#4990FF] transition-colors">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleEditClick(notice.id)
+                              }}
+                              className="p-1 text-gray-400 hover:text-[#4990FF] transition-colors disabled:opacity-50"
+                              disabled={isLoaderVisible}
+                              title="수정"
+                            >
                               <Edit size={16} />
                             </button>
-                            <button className="p-1 text-gray-400 hover:text-red-500 transition-colors">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDeleteClick(notice.id)
+                              }}
+                              className="p-1 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                              disabled={isLoaderVisible}
+                              title="삭제"
+                            >
                               <Trash2 size={16} />
                             </button>
                           </div>
@@ -177,53 +260,10 @@ export default function AdminNoticePage() {
               </tbody>
             </table>
           </div>
-
           <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
             <span className="text-sm text-gray-500">
-              총 <span className="font-medium text-gray-900">{data?.totalElements ?? 0}</span>개의 공지사항
+              총 <span className="font-medium text-gray-900">{filteredNotices.length}</span>개의 공지사항
             </span>
-            {data && data.totalPages > 0 && (
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setPage(p => Math.max(0, p - 1))}
-                  disabled={page === 0}
-                  className={cn(
-                    "inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 transition-colors",
-                    page === 0
-                      ? "text-gray-300"
-                      : "text-gray-500 hover:bg-gray-50"
-                  )}
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                {Array.from({ length: Math.min(5, data.totalPages) }, (_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setPage(i)}
-                    className={cn(
-                      "inline-flex items-center justify-center h-8 min-w-[2rem] rounded-lg text-sm font-medium transition-colors",
-                      page === i
-                        ? "bg-[#4990FF] text-white"
-                        : "text-gray-500 hover:bg-gray-50 border border-gray-200"
-                    )}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setPage(p => Math.min(data.totalPages - 1, p + 1))}
-                  disabled={page === data.totalPages - 1}
-                  className={cn(
-                    "inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 transition-colors",
-                    page === data.totalPages - 1
-                      ? "text-gray-300"
-                      : "text-gray-500 hover:bg-gray-50"
-                  )}
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            )}
           </div>
         </div>
       </div>
