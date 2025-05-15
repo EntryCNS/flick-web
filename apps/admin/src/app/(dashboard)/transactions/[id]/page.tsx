@@ -108,31 +108,21 @@ export default function TransactionDetailPage({ params: ParamPromise }: { params
                     <th className="px-6 py-4 text-right text-xs font-medium text-gray-500">가격</th>
                   </tr>
                 </thead>
-                {/* <tbody className="divide-y divide-gray-50">
-                  {transaction.items.map((item, index) => (
+                <tbody className="divide-y divide-gray-50">
+                  {transaction?.items.map((item, index) => (
                     <tr key={index}>
-                      <td className="px-6 py-4 text-sm text-gray-900">{item.name}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900">{item.product.name}</td>
                       <td className="px-6 py-4 text-sm text-gray-900 text-right">{item.quantity}</td>
                       <td className="px-6 py-4 text-sm text-gray-900 text-right">{item.price}</td>
                     </tr>
                   ))}
-                </tbody> */}
+                </tbody>
               </table>
             </div>
             <div className="p-6 border-t border-gray-100">
               <div className="space-y-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">소계</span>
-                  {/* <span className="text-gray-900 font-medium">{transaction.subtotal}</span> */}
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">부가세</span>
-                  {/* <span className="text-gray-900 font-medium">{transaction.tax}</span> */}
-                </div>
-                <div className="flex justify-between text-sm pt-4 border-t border-gray-100">
                   <span className="font-medium text-gray-900">총액</span>
-                  {/* <span className="font-medium text-[#4990FF]">{transaction.total}</span> */}
-                </div>
+                  <span className="font-medium text-[#4990FF]">{transaction?.amount}</span>
               </div>
             </div>
           </div>
@@ -145,27 +135,13 @@ export default function TransactionDetailPage({ params: ParamPromise }: { params
             <div className="space-y-4">
               <div className="flex flex-col">
                 <span className="text-sm text-gray-500 mb-1">거래 ID</span>
-                {/* <span className="text-sm font-medium text-gray-900">{transaction.id}</span> */}
+                <span className="text-sm font-medium text-gray-900">{transaction?.id}</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-sm text-gray-500 mb-1">결제 수단</span>
-                <span className="text-sm font-medium text-gray-900 flex items-center">
-                  <CreditCard className="w-4 h-4 mr-2 text-[#4990FF]" />
-                  {/* {transaction.paymentMethod} */}
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm text-gray-500 mb-1">카테고리</span>
-                <span className="text-sm font-medium text-gray-900 flex items-center">
-                  <Tag className="w-4 h-4 mr-2 text-[#4990FF]" />
-                  {/* {transaction.category} */}
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm text-gray-500 mb-1">위치</span>
+                <span className="text-sm text-gray-500 mb-1">부스</span>
                 <span className="text-sm font-medium text-gray-900 flex items-center">
                   <MapPin className="w-4 h-4 mr-2 text-[#4990FF]" />
-                  {/* {transaction.location} */}
+                  {transaction?.booth.name}
                 </span>
               </div>
             </div>
