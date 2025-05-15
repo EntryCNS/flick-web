@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Users, Store, Receipt, Stamp, HelpCircle, Bell } from "lucide-react";
+import { Users, Store, Receipt, Stamp, HelpCircle, Bell,Trophy } from "lucide-react";
 
 interface MenuItem {
   href: string;
@@ -45,6 +45,11 @@ const MENUS: MenuSection[] = [
         href: "/booths",
         icon: <Store size={18} className="text-[#6366F1]" />, // 부스/상점 아이콘, 보조 브랜드 색상
         label: "부스 목록",
+      },
+      {
+        href: "/booths/ranking",
+        icon: <Trophy size={18} className="text-[#FFD700]" />,
+        label: "부스 랭킹",
       },
     ]
   },
