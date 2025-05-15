@@ -4,6 +4,7 @@ import { Loader2, Store, ArrowUp, ArrowDown } from "lucide-react";
 import api from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { useState, useMemo } from "react";
 
 interface BoothType {
   id: string;
@@ -12,25 +13,54 @@ interface BoothType {
   status: "PENDING" | "APPROVED" | "REJECTED";
   totalSales: number;
   createdAt: string;
-  updatedAt: string;
+  updatedAt: string[];
 }
 
-const sortBoothsById = (booths: BoothType[]): BoothType[] => {
+type SortField = "id" | "totalSales";
+type SortOrder = "asc" | "desc";
+
+interface SortConfig {
+  field: SortField;
+  order: SortOrder;
+}
+
+const sortBooths = (booths: BoothType[], { field, order }: SortConfig): BoothType[] => {
   return [...booths].sort((a, b) => {
-    const idA = parseInt(a.id);
-    const idB = parseInt(b.id);
-    return idA - idB;
+    if (field === "id") {
+      const idA = parseInt(a.id);
+      const idB = parseInt(b.id);
+      return order === "asc" ? idA - idB : idB - idA;
+    } else {
+      return order === "asc" ? a.totalSales - b.totalSales : b.totalSales - a.totalSales;
+    }
   });
 };
 
 export default function BoothsPage() {
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    field: "id",
+    order: "asc"
+  });
+
   const { data: booths, isLoading } = useQuery<BoothType[]>({
     queryKey: ["booths"],
     queryFn: async () => {
       const { data } = await api.get("/booths");
-      return sortBoothsById(data);
+      return data;
     }
   });
+
+  const handleSortClick = (field: SortField) => {
+    setSortConfig(prev => ({
+      field,
+      order: prev.field === field && prev.order === "asc" ? "desc" : "asc"
+    }));
+  };
+
+  const sortedBooths = useMemo(() => {
+    if (!booths) return [];
+    return sortBooths(booths, sortConfig);
+  }, [booths, sortConfig]);
 
   const formatDate = (year: string, month: string, day: string) => {
     return `${year}-${month.toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
@@ -42,6 +72,15 @@ export default function BoothsPage() {
 
   const formatCurrency = (amount: number) => {
     return amount.toLocaleString('ko-KR') + '원';
+  };
+
+  const renderSortIcon = (field: SortField) => {
+    if (sortConfig.field !== field) return null;
+    return sortConfig.order === "asc" ? (
+      <ArrowUp size={14} />
+    ) : (
+      <ArrowDown size={14} />
+    );
   };
 
   return (
@@ -60,19 +99,31 @@ export default function BoothsPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg">
+      <div className="bg-white rounded-lg border border-gray-100">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-100">
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
-                  ID
+                  <button
+                    onClick={() => handleSortClick("id")}
+                    className="inline-flex items-center gap-1 hover:text-[#4990FF] transition-colors"
+                  >
+                    ID
+                    {renderSortIcon("id")}
+                  </button>
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
                   부스 이름
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
-                  총 매출
+                  <button
+                    onClick={() => handleSortClick("totalSales")}
+                    className="inline-flex items-center gap-1 hover:text-[#4990FF] transition-colors"
+                  >
+                    총 매출
+                    {renderSortIcon("totalSales")}
+                  </button>
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
                   수정일
@@ -86,7 +137,7 @@ export default function BoothsPage() {
                     <Loader2 size={36} className="mx-auto text-gray-400 animate-spin" />
                   </td>
                 </tr>
-              ) : !booths?.length ? (
+              ) : !sortedBooths.length ? (
                 <tr>
                   <td colSpan={4} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center">
@@ -97,7 +148,7 @@ export default function BoothsPage() {
                   </td>
                 </tr>
               ) : (
-                booths.map((booth) => (
+                sortedBooths.map((booth) => (
                   <tr 
                     key={booth.id}
                     className="hover:bg-gray-50 transition-colors"
@@ -119,7 +170,8 @@ export default function BoothsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span className={cn(
-                        "text-sm font-medium text-gray-900"
+                        "text-sm font-medium",
+                        sortConfig.field === "totalSales" ? "text-[#4990FF]" : "text-gray-900"
                       )}>
                         {formatCurrency(booth.totalSales)}
                       </span>
