@@ -59,12 +59,12 @@ const StatusBadge = ({ category }: StatusBadgeProps) => {
   );
 };
 
-const formatDateTime = (dateString: string): { date: string; time: string } => {
-  const date = new Date(dateString);
-  return {
-    date: date.toISOString().split('T')[0],
-    time: date.toTimeString().split(' ')[0]
-  };
+const formatDate = (year: string, month: string, day: string) => {
+  return `${year}-${month.toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
+};
+
+const formatTime = (hour: string, minute: string, second: string) => {
+  return `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}:${second.toString().padStart(2, "0")}`;
 };
 
 export default function AdminInquiryPage() {
@@ -167,8 +167,10 @@ export default function AdminInquiryPage() {
                   </tr>
                 ) : (
                   filteredInquiries.map((inquiry) => {
-                    const created = formatDateTime(inquiry.createdAt);
-                    const updated = formatDateTime(inquiry.updatedAt);
+                    const createdDate = formatDate(inquiry.createdAt[0], inquiry.createdAt[1], inquiry.createdAt[2]);
+                    const createdTime = formatTime(inquiry.createdAt[3], inquiry.createdAt[4], inquiry.createdAt[5]);
+                    const updatedDate = formatDate(inquiry.updatedAt[0], inquiry.updatedAt[1], inquiry.updatedAt[2]);
+                    const updatedTime = formatTime(inquiry.updatedAt[3], inquiry.updatedAt[4], inquiry.updatedAt[5]);
                     return (
                       <tr
                         key={inquiry.id}
@@ -187,14 +189,14 @@ export default function AdminInquiryPage() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-col">
-                            <span className="text-sm text-gray-900">{created.date}</span>
-                            <span className="text-xs text-gray-500">{created.time}</span>
+                            <span className="text-sm text-gray-900">{createdDate}</span>
+                            <span className="text-xs text-gray-500">{createdTime}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-col">
-                            <span className="text-sm text-gray-900">{updated.date}</span>
-                            <span className="text-xs text-gray-500">{updated.time}</span>
+                            <span className="text-sm text-gray-900">{updatedDate}</span>
+                            <span className="text-xs text-gray-500">{updatedTime}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-right">
