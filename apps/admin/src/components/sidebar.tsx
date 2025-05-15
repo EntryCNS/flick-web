@@ -61,7 +61,7 @@ const MENUS: MenuSection[] = [
     title: "기타",
     items: [
       {
-        href: "/inquirys",
+        href: "/inquiries",
         icon: <HelpCircle size={18} className="text-[#8B5CF6]" />,
         label: "문의"
       },

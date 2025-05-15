@@ -5,6 +5,7 @@ import { Search, Filter, ChevronDown, MoreHorizontal, ArrowLeft, ArrowRight } fr
 import { cn } from "@/lib/utils";
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useRouter } from 'next/navigation';
 
 type InquiryStatus = 'ACCOUNT' | 'PAYMENT' | 'SYSTEM' | 'OTHER';
 
@@ -68,6 +69,7 @@ const formatTime = (hour: string, minute: string, second: string) => {
 };
 
 export default function AdminInquiryPage() {
+  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -98,6 +100,10 @@ export default function AdminInquiryPage() {
       return matchesCategory && mathcesSearch;
     })
   }, [data?.content, selectedCategory, searchQuery]);
+
+  const handleRowClick = (id: number) => {
+    router.push(`/inquiries/${id}`)
+  }
 
   return (
     <div className="w-full max-w-[1200px] mx-auto px-6 py-8">
@@ -174,6 +180,7 @@ export default function AdminInquiryPage() {
                     return (
                       <tr
                         key={inquiry.id}
+                        onClick={() => handleRowClick(inquiry.id)}
                         className="hover:bg-gray-50 transition-colors"
                       >
                         <td className="px-6 py-4">
