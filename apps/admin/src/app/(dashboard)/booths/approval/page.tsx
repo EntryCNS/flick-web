@@ -32,7 +32,7 @@ export default function BoothApprovalPage() {
     mutationFn: (id: string) => api.post(`/booths/${id}/approve`),
     onSuccess: () => {
       toast.success("부스가 승인되었습니다");
-      queryClient.invalidateQueries({ queryKey: ["booths"] });
+      queryClient.invalidateQueries({ queryKey: ["pendingBooths"] });
     }
   });
 
@@ -40,7 +40,7 @@ export default function BoothApprovalPage() {
     mutationFn: (id: string) => api.post(`/booths/${id}/reject`),
     onSuccess: () => {
       toast.success("부스가 거부되었습니다");
-      queryClient.invalidateQueries({ queryKey: ["booths"] });
+      queryClient.invalidateQueries({ queryKey: ["pendingBooths"] });
     }
   });
 
