@@ -5,10 +5,14 @@ import { Loader2, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 interface TransactionType {
   id: number;
-  userId: number;
+  user: {
+    id: number
+    name: string;
+  }
   type: "CHARGE" | "PAYMENT";
   amount: number;
   balanceAfter: number;
@@ -46,20 +50,48 @@ const formatCurrency = (amount: number) => {
 };
 
 export default function TransactionsPage() {
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
 
   const { data, isLoading } = useQuery<PaginatedResponse>({
     queryKey: ['transactions', currentPage],
     queryFn: async () => {
-      const { data } = await api.get<PaginatedResponse>(`/transactions`);
+      const { data } = await api.get<PaginatedResponse>(`/transactions`, {
+        params: {
+          page: currentPage,
+          size: itemsPerPage,
+        }
+      });
       return data;
     },
   });
 
+  const handleRowClick = (id: number) => {
+    router.push(`/transactions/${id}`)
+  }
+
   const transactions = data?.content ?? [];
   const totalElements = data?.totalElements ?? 0;
   const totalPages = data?.totalPages ?? 1;
+
+  // 페이지네이션을 위한 계산 함수
+  const getPageNumbers = () => {
+    const maxPages = 5;
+    const halfMax = Math.floor(maxPages / 2);
+    
+    let startPage = Math.max(0, currentPage - halfMax);
+    let endPage = Math.min(totalPages - 1, startPage + maxPages - 1);
+    
+    if (endPage - startPage + 1 < maxPages) {
+      startPage = Math.max(0, endPage - maxPages + 1);
+    }
+    
+    return Array.from(
+      { length: Math.min(maxPages, totalPages) }, 
+      (_, i) => startPage + i
+    );
+  };
 
   return (
     <div className="w-full max-w-[1200px] mx-auto px-6 py-8">
@@ -73,12 +105,15 @@ export default function TransactionsPage() {
       </div>
 
       <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full min-w-[1000px]"> 
             <thead>
               <tr className="border-b border-gray-100">
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">사용자 ID</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">거래 ID</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">사용자 이름</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">거래 유형</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">부스 명</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">상품</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">거래 금액</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">거래 후 잔액</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">거래 일시</th>
@@ -87,13 +122,13 @@ export default function TransactionsPage() {
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-20 text-center">
+                  <td colSpan={8} className="px-6 py-20 text-center">
                     <Loader2 className="mx-auto animate-spin text-gray-400" size={36} />
                   </td>
                 </tr>
               ) : transactions.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-20 text-center text-gray-500">
+                  <td colSpan={8} className="px-6 py-20 text-center text-gray-500">
                     거래 내역이 없습니다
                   </td>
                 </tr>
@@ -106,11 +141,17 @@ export default function TransactionsPage() {
                   return (
                     <tr
                       key={transaction.id}
-                      className="hover:bg-gray-50 transition-colors"
+                      onClick={() => handleRowClick(transaction.id)}
+                      className="hover:bg-gray-50 transition-colors cursor-pointer"
                     >
                       <td className="px-6 py-4">
                         <span className="text-sm font-medium text-gray-900">
-                          {transaction.userId}
+                          {transaction.id}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-medium text-gray-900">
+                          {transaction.user.name}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -129,6 +170,16 @@ export default function TransactionsPage() {
                             {isCharge ? "충전" : "결제"}
                           </span>
                         </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-medium text-gray-900">
+                          {!isCharge ? transaction.booth.name : "-"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-medium text-gray-900">
+                          {!isCharge ? transaction.product.name : "-"}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className={cn(
@@ -157,52 +208,55 @@ export default function TransactionsPage() {
           </table>
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <span className="text-sm text-gray-500">
             총 <span className="font-medium text-gray-900">{totalElements}</span>개의 거래
           </span>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
-              disabled={currentPage === 0}
-              className={cn(
-                "inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 transition-colors",
-                currentPage === 1
-                  ? "text-gray-300"
-                  : "text-gray-500 hover:bg-gray-50"
-              )}
-            >
-              &lt;
-            </button>
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => (
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1">
               <button
-                key={i}
-                onClick={() => setCurrentPage(i)}
+                onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                disabled={currentPage === 0}
                 className={cn(
-                  "inline-flex items-center justify-center h-8 min-w-[2rem] rounded-lg text-sm font-medium transition-colors",
-                  currentPage === i
-                    ? "bg-[#4990FF] text-white"
-                    : "text-gray-500 hover:bg-gray-50 border border-gray-200"
+                  "inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 transition-colors",
+                  currentPage === 0
+                    ? "text-gray-300 cursor-not-allowed"
+                    : "text-gray-500 hover:bg-gray-50"
                 )}
               >
-                {i + 1}
+                &lt;
               </button>
-            ))}
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
-              disabled={currentPage === totalPages - 1}
-              className={cn(
-                "inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 transition-colors",
-                currentPage === totalPages - 1
-                  ? "text-gray-300"
-                  : "text-gray-500 hover:bg-gray-50"
-              )}
-            >
-              &gt;
-            </button>
-          </div>
+              {getPageNumbers().map(pageNum => (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={cn(
+                    "inline-flex items-center justify-center h-8 min-w-[2rem] rounded-lg text-sm font-medium transition-colors",
+                    currentPage === pageNum
+                      ? "bg-[#4990FF] text-white"
+                      : "text-gray-500 hover:bg-gray-50 border border-gray-200"
+                  )}
+                >
+                  {pageNum + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+                disabled={currentPage === totalPages - 1}
+                className={cn(
+                  "inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 transition-colors",
+                  currentPage === totalPages - 1
+                    ? "text-gray-300 cursor-not-allowed"
+                    : "text-gray-500 hover:bg-gray-50"
+                )}
+              >
+                &gt;
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
+

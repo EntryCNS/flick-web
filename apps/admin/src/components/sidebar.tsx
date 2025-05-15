@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Users, Store, Receipt, Stamp, HelpCircle, Bell,Trophy } from "lucide-react";
+import { Users, Store, Receipt, Stamp, HelpCircle, Bell, Trophy, Download } from "lucide-react";
 
 interface MenuItem {
   href: string;
@@ -19,16 +19,25 @@ type MenuSection = {
 
 const MENUS: MenuSection[] = [
   {
+    items: [
+      {
+        href: "/",
+        icon: <Users size={18} className="text-[#4990FF]" />,
+        label: "대시 보드",
+      }
+    ]
+  },
+  {
     title: "유저",
     items: [
       {
         href: "/users",
-        icon: <Users size={18} className="text-[#4990FF]" />, // 유저 관련 아이콘, 메인 브랜드 컬러
+        icon: <Users size={18} className="text-[#4990FF]" />,
         label: "유저 목록",
       },
       {
-        href: "/transcations",
-        icon: <Receipt size={18} className="text-[#22C55E]" />, // 거래/영수증 아이콘, 포지티브 색상
+        href: "/transactions",
+        icon: <Receipt size={18} className="text-[#22C55E]" />,
         label: "거래 내역",
       }
     ],
@@ -38,12 +47,12 @@ const MENUS: MenuSection[] = [
     items: [
       {
         href: "/booths/approval",
-        icon: <Stamp size={18} className="text-[#F97316]" />, // 승인/인증 아이콘, 주의/액션 색상
+        icon: <Stamp size={18} className="text-[#F97316]" />,
         label: "부스 승인 / 거부",
       },
       {
         href: "/booths",
-        icon: <Store size={18} className="text-[#6366F1]" />, // 부스/상점 아이콘, 보조 브랜드 색상
+        icon: <Store size={18} className="text-[#6366F1]" />,
         label: "부스 목록",
       },
       {
@@ -57,16 +66,25 @@ const MENUS: MenuSection[] = [
     title: "기타",
     items: [
       {
-        href: "/inquirys",
-        icon: <HelpCircle size={18} className="text-[#8B5CF6]" />, // 문의/도움말 아이콘, 특수 색상
+        href: "/inquiries",
+        icon: <HelpCircle size={18} className="text-[#8B5CF6]" />,
         label: "문의"
       },
       {
         href: "/notices",
-        icon: <Bell size={18} className="text-[#EF4444]" />, // 알림/공지 아이콘, 중요 색상
+        icon: <Bell size={18} className="text-[#EF4444]" />,
         label: "공지사항"
       }
     ]
+  },
+  {
+    items: [
+      {
+        href: '/download',
+        icon: <Download size={18} className="text-[#8B5CF6]" />,
+        label: "다운로드"
+      }
+    ]    
   }
 ];
 
