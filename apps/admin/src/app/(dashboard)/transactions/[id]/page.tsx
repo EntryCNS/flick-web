@@ -37,11 +37,24 @@ const statusConfig = {
   'PAYMENT': { className: 'bg-[#4990FF]/10 text-[#4990FF]' }
 }
 
+const formatDate = (year: string | undefined, month: string | undefined, day: string | undefined) => {
+  return `${year}-${month?.toString().padStart(2, "0")}-${day?.toString().padStart(2, "0")}`;
+};
+
+const formatTime = (hour: string | undefined, minute: string | undefined, second: string | undefined) => {
+  return `${hour?.toString().padStart(2, "0")}:${minute?.toString().padStart(2, "0")}:${second?.toString().padStart(2, "0")}`;
+};
+
+const formatCurrency = (amount: number) => {
+  return amount.toLocaleString('ko-KR') + '원';
+};
+
+
 export default function TransactionDetailPage({ params: ParamPromise }: { params: Promise<{ id: number }> }) {
   const params = use(ParamPromise)
   const router = useRouter();
 
-  const { data: transaction } = useQuery<TransactionType>({
+  const { data: transaction, isLoading } = useQuery<TransactionType>({
     queryKey: ["transaction"],
     queryFn: async () => {
       const { data } = await api.get(`transactions/${params.id}`)
@@ -76,25 +89,51 @@ export default function TransactionDetailPage({ params: ParamPromise }: { params
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* 왼쪽 컬럼 (거래 정보) */}
         <div className="lg:col-span-2 space-y-6">
-          {/* 거래 요약 */}
           <div className="bg-white rounded-lg border border-gray-100 p-6">
             <div className="flex flex-col items-center">
-              <span className={cn(
-                "inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium",
-                statusConfig[transaction?.type ?? "CHARGE"]?.className || ''
-              )}>
-                {transaction?.type}
-              </span>
-              <h2 className="text-3xl font-semibold mt-3 mb-1 text-gray-900">{transaction?.amount}</h2>
-              <p className="text-gray-600 font-medium">{transaction?.booth.name}</p>
-              <div className="flex items-center mt-2 text-sm text-gray-500">
-                <Clock className="w-4 h-4 mr-1.5" />
-                <span>{transaction?.createdAt}</span>
-              </div>
+              {isLoading ? (
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="h-6 w-20 bg-gray-100 rounded animate-pulse" />
+                  <div className="h-8 w-32 bg-gray-100 rounded animate-pulse" />
+                  <div className="h-6 w-24 bg-gray-100 rounded animate-pulse" />
+                </div>
+              ) : (
+                <>
+                  <span className={cn(
+                    "inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium",
+                    statusConfig[transaction?.type ?? "CHARGE"]?.className || ''
+                  )}>
+                    {transaction?.type === 'CHARGE' ? '충전' : '결제'}
+                  </span>
+                  <h2 className="text-3xl font-semibold mt-3 mb-1 text-gray-900">
+                    {formatCurrency(transaction?.amount || 0)}
+                  </h2>
+                  <p className="text-gray-600 font-medium">
+                    {transaction?.booth?.name || '-'}
+                  </p>
+                  <div className="flex items-center mt-2 text-sm text-gray-500">
+                    <Clock className="w-4 h-4 mr-1.5" />
+                    {transaction?.createdAt ? (
+                      <div>
+                        <span>{formatDate(
+                          transaction.createdAt[0],
+                          transaction.createdAt[1],
+                          transaction.createdAt[2]
+                        )}</span>
+                        {' '}/{' '}
+                        <span>{formatTime(
+                          transaction.createdAt[3],
+                          transaction.createdAt[4],
+                          transaction.createdAt[5]
+                        )}</span>
+                      </div>
+                    ) : '-'}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
-          {/* 항목 내역 */}
           <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
             <div className="p-6 border-b border-gray-100">
               <h3 className="text-lg font-medium text-gray-900">항목 내역</h3>
@@ -109,42 +148,66 @@ export default function TransactionDetailPage({ params: ParamPromise }: { params
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {transaction?.items.map((item, index) => (
-                    <tr key={index}>
-                      <td className="px-6 py-4 text-sm text-gray-900">{item.product.name}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900 text-right">{item.quantity}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900 text-right">{item.price}</td>
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={3} className="px-6 py-20 text-center">
+                        <div className="flex justify-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-300" />
+                        </div>
+                      </td>
                     </tr>
-                  ))}
+                  ) : transaction?.items?.length ? (
+                    transaction.items.map((item, index) => (
+                      <tr key={index}>
+                        <td className="px-6 py-4 text-sm text-gray-900">{item.product.name}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900 text-right">{item.quantity}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900 text-right">{formatCurrency(item.price)}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={3} className="px-6 py-20 text-center text-gray-500">
+                        항목이 없습니다
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
             <div className="p-6 border-t border-gray-100">
-              <div className="space-y-4">
-                  <span className="font-medium text-gray-900">총액</span>
-                  <span className="font-medium text-[#4990FF]">{transaction?.amount}</span>
+              <div className="flex justify-between items-center">
+                <span className="font-medium text-gray-900">총액</span>
+                <span className="font-medium text-[#4990FF]">
+                  {transaction ? formatCurrency(transaction.amount) : '-'}
+                </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* 오른쪽 컬럼 (상세 정보) */}
         <div className="space-y-6">
           <div className="bg-white rounded-lg border border-gray-100 p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">거래 정보</h3>
-            <div className="space-y-4">
-              <div className="flex flex-col">
-                <span className="text-sm text-gray-500 mb-1">거래 ID</span>
-                <span className="text-sm font-medium text-gray-900">{transaction?.id}</span>
+            {isLoading ? (
+              <div className="space-y-4">
+                <div className="h-4 bg-gray-100 rounded animate-pulse" />
+                <div className="h-4 bg-gray-100 rounded animate-pulse" />
               </div>
-              <div className="flex flex-col">
-                <span className="text-sm text-gray-500 mb-1">부스</span>
-                <span className="text-sm font-medium text-gray-900 flex items-center">
-                  <MapPin className="w-4 h-4 mr-2 text-[#4990FF]" />
-                  {transaction?.booth.name}
-                </span>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex flex-col">
+                  <span className="text-sm text-gray-500 mb-1">거래 ID</span>
+                  <span className="text-sm font-medium text-gray-900">{transaction?.id || '-'}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm text-gray-500 mb-1">부스</span>
+                  <span className="text-sm font-medium text-gray-900 flex items-center">
+                    <MapPin className="w-4 h-4 mr-2 text-[#4990FF]" />
+                    {transaction?.booth?.name || '-'}
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
