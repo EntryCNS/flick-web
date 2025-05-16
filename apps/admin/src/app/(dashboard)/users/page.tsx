@@ -92,7 +92,7 @@ export default function UsersPage() {
     <div className="w-full max-w-[1200px] mx-auto px-6 py-8">
       <div className="mb-8">
         <h1 className="text-2xl font-medium text-gray-900">유저 목록</h1>
-        <p className="text-gray-500 mt-1.5">더블클릭하여 유저의 금액을 충전할 수 있습니다</p>
+        <p className="text-gray-500 mt-1.5">클릭하여 유저의 금액을 충전할 수 있습니다</p>
       </div>
 
       <div className="bg-white">
@@ -197,7 +197,7 @@ export default function UsersPage() {
                   <tr
                     key={user.id}
                     className="hover:bg-gray-50 transition-colors cursor-pointer"
-                    onDoubleClick={() => {
+                    onClick={() => {
                       setSelectedUser(user);
                       setModalOpen(true);
                     }}
