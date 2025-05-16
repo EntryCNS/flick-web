@@ -67,13 +67,41 @@ export default function UsersPage() {
   ];
 
   const handleFilterAdd = (category: string, value: string) => {
-    setActiveFilters(prev => [...prev, { category, value: [value] }]);
+    setActiveFilters(prev => {
+      // 이미 해당 카테고리가 있는지 확인
+      const existingFilterIndex = prev.findIndex(filter => filter.category === category);
+
+      if (existingFilterIndex >= 0) {
+        // 이미 해당 카테고리가 있으면 값만 추가
+        const newFilters = [...prev];
+        // 이미 해당 값이 있는지 확인하고, 없으면 추가
+        if (!newFilters[existingFilterIndex].value.includes(value)) {
+          newFilters[existingFilterIndex].value.push(value);
+        }
+        return newFilters;
+      } else {
+        // 해당 카테고리가 없으면 새로 추가
+        return [...prev, { category, value: [value] }];
+      }
+    });
     setIsFilterMenuOpen(false);
     setCurrentPage(1);
   };
 
-  const handleFilterRemove = (index: number) => {
-    setActiveFilters(prev => prev.filter((_, i) => i !== index));
+  const handleFilterRemove = (category: string, value: string) => {
+    setActiveFilters(prev => {
+      const newFilters = prev.map(filter => {
+        if (filter.category === category) {
+          // 해당 값만 제거
+          const newValues = filter.value.filter(v => v !== value);
+          return { ...filter, value: newValues };
+        }
+        return filter;
+      });
+
+      // 값이 없는 필터는 제거
+      return newFilters.filter(filter => filter.value.length > 0);
+    });
     setCurrentPage(1);
   };
 
@@ -156,20 +184,22 @@ export default function UsersPage() {
 
           {activeFilters.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {activeFilters.map((filter, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg text-sm"
-                >
-                  <span className="text-[#4990FF]">{filter.category}:</span>
-                  <span className="text-gray-700">{filter.value.join(', ')}</span>
-                  <button
-                    onClick={() => handleFilterRemove(i)}
-                    className="text-gray-400 hover:text-gray-600"
+              {activeFilters.map((filter) => (
+                filter.value.map((val, i) => (
+                  <div
+                    key={`${filter.category}-${val}`}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg text-sm"
                   >
-                    <X size={14} />
-                  </button>
-                </div>
+                    <span className="text-[#4990FF]">{filter.category}:</span>
+                    <span className="text-gray-700">{val}</span>
+                    <button
+                      onClick={() => handleFilterRemove(filter.category, val)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))
               ))}
             </div>
           )}
