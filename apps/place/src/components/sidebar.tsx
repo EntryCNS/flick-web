@@ -22,7 +22,7 @@ const MENUS: MenuSection[] = [
     title: "매출 리포트",
     items: [
       {
-        href: "/dashboard",
+        href: "/",
         icon: <BarChart3 size={18} className="text-[#4990FF]" />,
         label: "매출현황",
       },
@@ -30,15 +30,6 @@ const MENUS: MenuSection[] = [
         href: "/sales/history",
         icon: <FileText size={18} className="text-[#F03E3E]" />,
         label: "판매내역",
-      },
-    ],
-  },
-  {
-    items: [
-      {
-        href: "/reports/download",
-        icon: <Download size={18} />,
-        label: "매출 리포트 다운로드",
       },
     ],
   },

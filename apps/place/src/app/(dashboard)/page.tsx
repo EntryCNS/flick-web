@@ -1,11 +1,88 @@
-import React from "react";
+"use client";
 
-export default function DashboardPage() {
+import { Wallet, CreditCard, PiggyBank } from 'lucide-react';
+import { cn } from "@/lib/utils";
+import { useQuery } from '@tanstack/react-query';
+import api from '@/lib/api';
+
+interface StatisticType {
+  totalSales: number;
+  totalOrders: number; 
+}
+
+const formatCurrency = (amount: number) => {
+  return amount.toLocaleString('ko-KR') + '원';
+};
+
+const formatCount = (count: number) => {
+  return count.toLocaleString('ko-KR') + '건';
+};
+
+const statsConfig = [
+  {
+    key: 'totalSales',
+    title: "총 판매 금액",
+    icon: Wallet,
+    color: "text-[#4990FF]",
+    bgColor: "bg-[#4990FF]/10",
+    description: "판매한 상품의 전체 금액",
+    format: formatCurrency
+  },
+  {
+    key: 'totalOrders',
+    title: "총 거래 건수",
+    icon: CreditCard,
+    color: "text-rose-500", 
+    bgColor: "bg-rose-50",
+    description: "전체 거래 건수",
+    format: formatCount
+  }
+] as const;
+
+export default function PlaceDashboard() {
+  const { data: statistics } = useQuery<StatisticType>({
+    queryKey: ['statistics'],
+    queryFn: async () => {
+      const { data } = await api.get<StatisticType>(`/statistics`);
+      return data;
+    }
+  })
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">대시보드</h1>
-        <p className="text-muted-foreground mt-1">Flick Place</p>
+    <div className="w-full max-w-[1200px] mx-auto px-6 py-8">
+
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-medium text-gray-900">대시보드</h1>
+          <p className="text-gray-500 mt-1">
+            전체 거래 현황을 한눈에 확인하세요
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {statsConfig.map((stat) => (
+          <div
+            key={stat.key}
+            className="bg-white rounded-lg border border-gray-100 p-6 hover:border-gray-200 transition-colors"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className={cn(
+                "p-3 rounded-lg",
+                stat.bgColor
+              )}>
+                <stat.icon className={cn("w-6 h-6", stat.color)} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-sm font-medium text-gray-500">{stat.title}</h3>
+              <p className="text-2xl font-semibold text-gray-900">
+                {statistics ? stat.format(statistics[stat.key]) : '-'}
+              </p>
+              <p className="text-xs text-gray-500">{stat.description}</p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
