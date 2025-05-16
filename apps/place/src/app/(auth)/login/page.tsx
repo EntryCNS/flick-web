@@ -24,6 +24,11 @@ interface ErrorResponse {
   message: string;
 }
 
+interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,7 +56,7 @@ export default function LoginPage() {
   const isPasswordValid = Boolean(passwordValue && passwordValue.length > 0);
 
   useEffect(() => {
-    useTokenStore.getState().clearToken();
+    useTokenStore.getState().clearTokens();
 
     const registeredUsername = sessionStorage.getItem("registeredUsername");
     const savedUsername = localStorage.getItem("savedUsername");
@@ -82,18 +87,21 @@ export default function LoginPage() {
   const login = async (data: LoginFormData) => {
     setIsSubmitting(true);
     try {
-      const response = await api.post("/auth/login", data);
+      const response = await api.post<LoginResponse>("/auth/login", data);
+      const { accessToken, refreshToken } = response.data;
 
-      if (response.data.accessToken) {
+      if (accessToken && refreshToken) {
         if (rememberMe) {
           localStorage.setItem("savedUsername", data.username);
         } else {
           localStorage.removeItem("savedUsername");
         }
 
-        useTokenStore.getState().setToken(response.data.accessToken);
+        useTokenStore.getState().setTokens(accessToken, refreshToken);
         toast.success("로그인에 성공했습니다");
         router.push("/");
+      } else {
+        toast.error("로그인 정보를 받지 못했습니다")
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
