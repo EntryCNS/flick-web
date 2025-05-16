@@ -14,22 +14,28 @@ const formatCurrency = (amount: number) => {
   return amount.toLocaleString('ko-KR') + '원';
 };
 
+const formatCount = (count: number) => {
+  return count.toLocaleString('ko-KR') + '건';
+};
+
 const statsConfig = [
   {
     key: 'totalSales',
-    title: "총 충전 금액",
+    title: "총 판매 금액",
     icon: Wallet,
     color: "text-[#4990FF]",
     bgColor: "bg-[#4990FF]/10",
-    description: "전체 충전된 금액"
+    description: "판매한 상품의 전체 금액",
+    format: formatCurrency
   },
   {
     key: 'totalOrders',
-    title: "총 사용 금액",
+    title: "총 거래 건수",
     icon: CreditCard,
     color: "text-rose-500", 
     bgColor: "bg-rose-50",
-    description: "전체 결제된 금액"
+    description: "전체 거래 건수",
+    format: formatCount
   }
 ] as const;
 
@@ -44,7 +50,7 @@ export default function PlaceDashboard() {
 
   return (
     <div className="w-full max-w-[1200px] mx-auto px-6 py-8">
-      {/* 헤더 */}
+
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-medium text-gray-900">대시보드</h1>
@@ -54,7 +60,6 @@ export default function PlaceDashboard() {
         </div>
       </div>
 
-      {/* 통계 카드 영역 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {statsConfig.map((stat) => (
           <div
@@ -72,7 +77,7 @@ export default function PlaceDashboard() {
             <div className="space-y-1">
               <h3 className="text-sm font-medium text-gray-500">{stat.title}</h3>
               <p className="text-2xl font-semibold text-gray-900">
-                {statistics ? formatCurrency(statistics[stat.key]) : '-'}
+                {statistics ? stat.format(statistics[stat.key]) : '-'}
               </p>
               <p className="text-xs text-gray-500">{stat.description}</p>
             </div>
