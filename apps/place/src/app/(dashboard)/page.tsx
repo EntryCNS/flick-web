@@ -1,59 +1,84 @@
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+"use client";
 
-export default function DashboardPage() {
+import { Wallet, CreditCard, PiggyBank } from 'lucide-react';
+import { cn } from "@/lib/utils";
+import { useQuery } from '@tanstack/react-query';
+import api from '@/lib/api';
+
+interface StatisticType {
+  totalSales: number;
+  totalOrders: number; 
+}
+
+const formatCurrency = (amount: number) => {
+  return amount.toLocaleString('ko-KR') + '원';
+};
+
+const statsConfig = [
+  {
+    key: 'totalSales',
+    title: "총 충전 금액",
+    icon: Wallet,
+    color: "text-[#4990FF]",
+    bgColor: "bg-[#4990FF]/10",
+    description: "전체 충전된 금액"
+  },
+  {
+    key: 'totalOrders',
+    title: "총 사용 금액",
+    icon: CreditCard,
+    color: "text-rose-500", 
+    bgColor: "bg-rose-50",
+    description: "전체 결제된 금액"
+  }
+] as const;
+
+export default function PlaceDashboard() {
+  const { data: statistics } = useQuery<StatisticType>({
+    queryKey: ['statistics'],
+    queryFn: async () => {
+      const { data } = await api.get<StatisticType>(`/statistics`);
+      return data;
+    }
+  })
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">대시보드</h1>
-        <p className="text-muted-foreground mt-1">
-          Flick Place 시스템의 주요 현황을 확인하세요
-        </p>
+    <div className="w-full max-w-[1200px] mx-auto px-6 py-8">
+      {/* 헤더 */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-medium text-gray-900">대시보드</h1>
+          <p className="text-gray-500 mt-1">
+            전체 거래 현황을 한눈에 확인하세요
+          </p>
+        </div>
       </div>
 
+      {/* 통계 카드 영역 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              총 부스
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">12</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              오늘의 주문
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">156</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              총 매출
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">₩1,245,000</p>
-          </CardContent>
-        </Card>
+        {statsConfig.map((stat) => (
+          <div
+            key={stat.key}
+            className="bg-white rounded-lg border border-gray-100 p-6 hover:border-gray-200 transition-colors"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className={cn(
+                "p-3 rounded-lg",
+                stat.bgColor
+              )}>
+                <stat.icon className={cn("w-6 h-6", stat.color)} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-sm font-medium text-gray-500">{stat.title}</h3>
+              <p className="text-2xl font-semibold text-gray-900">
+                {statistics ? formatCurrency(statistics[stat.key]) : '-'}
+              </p>
+              <p className="text-xs text-gray-500">{stat.description}</p>
+            </div>
+          </div>
+        ))}
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>최근 활동</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm">
-          <p className="text-muted-foreground">최근 활동이 여기에 표시됩니다</p>
-        </CardContent>
-      </Card>
     </div>
   );
 }
