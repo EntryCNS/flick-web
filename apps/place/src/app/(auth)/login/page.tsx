@@ -3,7 +3,7 @@
 import React, { useEffect, useState, KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,6 +28,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -170,14 +171,27 @@ export default function LoginPage() {
             <label className="block text-[15px] font-medium text-[#4E5968] mb-1">
               비밀번호
             </label>
-            <input
-              type="password"
-              {...register("password")}
-              placeholder="비밀번호를 입력하세요"
-              className="w-full h-[48px] px-[18px] border border-[#DDE2E5] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#4990FF] focus:border-transparent"
-              onKeyDown={handleKeyDown}
-              autoComplete="current-password"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                {...register("password")}
+                placeholder="비밀번호를 입력하세요"
+                className="w-full h-[48px] px-[18px] border border-[#DDE2E5] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#4990FF] focus:border-transparent"
+                onKeyDown={handleKeyDown}
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {showPassword ? (
+                  <Eye size={20} className="stroke-[1.5px]" />
+                ) : (
+                  <EyeOff size={20} className="stroke-[1.5px]" />
+                )}
+              </button>
+            </div>
             {errors.password && (
               <p className="text-red-500 text-xs mt-1">
                 {errors.password.message}
