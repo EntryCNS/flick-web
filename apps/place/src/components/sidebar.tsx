@@ -26,11 +26,11 @@ const MENUS: MenuSection[] = [
         icon: <BarChart3 size={18} className="text-[#4990FF]" />,
         label: "매출현황",
       },
-      {
-        href: "/sales/history",
-        icon: <FileText size={18} className="text-[#F03E3E]" />,
-        label: "판매내역",
-      },
+      // {
+      //   href: "/sales/history",
+      //   icon: <FileText size={18} className="text-[#F03E3E]" />,
+      //   label: "판매내역",
+      // },
     ],
   },
   {

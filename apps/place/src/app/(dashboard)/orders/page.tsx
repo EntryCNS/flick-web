@@ -152,7 +152,7 @@ export default function OrdersPage() {
                     <tr
                       key={order.id}
                       onClick={() => handleViewDetails(order.id)}
-                      className="border-t hover:bg-gray-50 cursor-pointer"
+                      className="border-t hover:bg-gray-50"
                     >
                       <td className="px-4 py-3 text-sm font-medium">
                         #{order.id}
@@ -185,12 +185,12 @@ export default function OrdersPage() {
         </div>
       )}
 
-      {selectedOrderId && (
+      {/* {selectedOrderId && (
         <OrderDetailModal
           orderId={selectedOrderId}
           onClose={handleCloseModal}
         />
-      )}
+      )} */}
     </div>
   );
 }
