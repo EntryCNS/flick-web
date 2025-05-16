@@ -174,9 +174,9 @@ export default function LoginPage() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
               >
                 {showPassword ? (
-                  <EyeOff size={20} className="stroke-[1.5px]"/>
+                  <Eye size={20} className="stroke-[1.5px]"/>
                 ) : (
-                  <Eye size={20} className="stroke-[1.5px]" />
+                  <EyeOff size={20} className="stroke-[1.5px]" />
                 )}
               </button>
             </div>
