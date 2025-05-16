@@ -193,7 +193,7 @@ export default function AdminNoticePage() {
                     return (
                       <tr
                         key={notice.id}
-                        className="hover:bg-gray-50 transition-colors"
+                        className="hover:bg-gray-50 transition-colors cursor-pointer"
                         onClick={() => handleRowClick(notice.id)}
                       >
                         <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
