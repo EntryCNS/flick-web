@@ -75,8 +75,8 @@ export function Sidebar() {
         const topMargin = isFirstSection
           ? ""
           : section.title && sectionIndex > 1
-          ? "mt-6"
-          : "mt-4";
+            ? "mt-6"
+            : "mt-4";
 
         return (
           <div
