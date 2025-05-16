@@ -102,6 +102,7 @@ export default function AdminInquiryPage() {
   }, [data?.content, selectedCategory, searchQuery]);
 
   const handleRowClick = (id: number) => {
+    console.log(id)
     router.push(`/inquiries/${id}`)
   }
 
@@ -181,7 +182,7 @@ export default function AdminInquiryPage() {
                       <tr
                         key={inquiry.id}
                         onClick={() => handleRowClick(inquiry.id)}
-                        className="hover:bg-gray-50 transition-colors"
+                        className="hover:bg-gray-50 transition-colors cursor-pointer"
                       >
                         <td className="px-6 py-4">
                           <span className="text-sm font-medium text-gray-900">

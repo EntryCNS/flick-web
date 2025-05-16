@@ -18,7 +18,7 @@ interface NoticeType {
   createdAt: string[];
 }
 
-export default function NoticeDetailPage({ params: ParamPromise }: { params: Promise<{id: number}>}) {
+export default function NoticeDetailPage({ params: ParamPromise }: { params: Promise<{ id: number }> }) {
   const params = use(ParamPromise)
   const noticeId = params.id;
   const router = useRouter();
@@ -57,7 +57,7 @@ export default function NoticeDetailPage({ params: ParamPromise }: { params: Pro
 
   const handleDelete = () => {
     if (isDeleting) return;
-    
+
     if (window.confirm("정말로 이 공지사항을 삭제하시겠습니까?")) {
       deleteNotice(noticeId);
     }
@@ -90,21 +90,21 @@ export default function NoticeDetailPage({ params: ParamPromise }: { params: Pro
 
   return (
     <div className="w-full max-w-[1200px] mx-auto px-6 py-8">
+      {/* 헤더 */}
       <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-medium text-gray-900">공지사항</h1>
-          <p className="text-gray-500 mt-1">
-            공지사항을 확인하고 관리하세요
-          </p>
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => router.back()}
+            className="inline-flex items-center justify-center h-10 w-10 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-2xl font-medium text-gray-900">공지사항</h1>
+            <p className="text-gray-500 mt-1">공지사항을 확인하고 관리하세요</p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => router.push("/notices")}
-            className="inline-flex items-center h-10 px-4 border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 mr-1.5" />
-            목록으로
-          </button>
           <button
             onClick={() => router.push(`/notices/${noticeId}/edit`)}
             disabled={isDeleting}
@@ -116,12 +116,13 @@ export default function NoticeDetailPage({ params: ParamPromise }: { params: Pro
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
+      {/* 메인 콘텐츠 */}
+      <div className="bg-white rounded-lg border border-gray-100">
         <div className="p-6">
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-2">
               {notice?.isPinned && (
-                <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-red-50 text-red-600">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-red-50 text-red-600">
                   고정
                 </span>
               )}
@@ -137,7 +138,7 @@ export default function NoticeDetailPage({ params: ParamPromise }: { params: Pro
 
           <div className="prose max-w-none">
             {notice?.content.split('\n\n').map((paragraph, index) => (
-              <p key={index} className="mb-4 text-gray-600 whitespace-pre-line">
+              <p key={index} className="mb-4 text-sm text-gray-600 whitespace-pre-line leading-relaxed">
                 {paragraph}
               </p>
             ))}
@@ -148,7 +149,7 @@ export default function NoticeDetailPage({ params: ParamPromise }: { params: Pro
           <button
             onClick={handleDelete}
             disabled={isDeleting}
-            className="inline-flex items-center h-10 px-4 border border-red-200 text-red-500 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center h-9 px-4 border border-red-200 text-red-500 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Trash2 className="w-4 h-4 mr-1.5" />
             {isDeleting ? "삭제 중..." : "삭제하기"}
