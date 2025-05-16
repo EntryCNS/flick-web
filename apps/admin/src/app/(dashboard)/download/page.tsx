@@ -102,7 +102,6 @@ export default function ExportPage() {
             </svg>
           </div>
           <h2 className="text-xl font-medium text-gray-800">다운로드 완료</h2>
-          <p className="text-gray-500">창이 곧 닫힙니다.</p>
         </div>
       )}
 
