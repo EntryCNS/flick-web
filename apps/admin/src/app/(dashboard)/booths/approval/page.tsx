@@ -67,7 +67,7 @@ export default function BoothApprovalPage() {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-[960px] mx-auto px-5 py-7">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3 mb-8">
           <h1 className="text-xl font-medium text-gray-900">부스 승인</h1>
           <div className="flex items-center h-7 px-2 bg-[#4990FF]/10 rounded">
             <span className="text-xs font-medium text-[#4990FF]">
@@ -94,7 +94,7 @@ export default function BoothApprovalPage() {
             pendingBooths.map((booth) => {
               const datetime = formatDateTime(booth.createdAt);
               return (
-                <div 
+                <div
                   key={booth.id}
                   className="p-4 rounded-lg hover:bg-gray-50 transition-colors"
                 >
