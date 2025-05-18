@@ -269,7 +269,7 @@ export default function UsersPage() {
           </table>
 
           {filteredUsers.length > 0 && (
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+            <div className="px-6 py-2 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
               <span className="text-sm text-gray-600">
                 페이지 {currentPage} / {totalPages}
               </span>

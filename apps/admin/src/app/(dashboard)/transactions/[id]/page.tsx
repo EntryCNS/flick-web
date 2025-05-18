@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
+import dayjs from "dayjs"
 
 interface TransactionType {
   id: number;
@@ -115,17 +116,14 @@ export default function TransactionDetailPage({ params: ParamPromise }: { params
                     <Clock className="w-4 h-4 mr-1.5" />
                     {transaction?.createdAt ? (
                       <div>
-                        <span>{formatDate(
-                          transaction.createdAt[0],
-                          transaction.createdAt[1],
-                          transaction.createdAt[2]
-                        )}</span>
+                        <span>{dayjs(new Date(...transaction.createdAt)).format("YYYY.MM.DD")}</span>
                         {' '}/{' '}
-                        <span>{formatTime(
-                          transaction.createdAt[3],
-                          transaction.createdAt[4],
-                          transaction.createdAt[5]
-                        )}</span>
+                        <span>{new Date(...transaction.createdAt).toLocaleString("ko-KR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                            hour12: false
+                          })}</span>
                       </div>
                     ) : '-'}
                   </div>
@@ -135,7 +133,7 @@ export default function TransactionDetailPage({ params: ParamPromise }: { params
           </div>
 
           <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
-            <div className="p-6 border-b border-gray-100">
+            <div className="p-4 border-b border-gray-100">
               <h3 className="text-lg font-medium text-gray-900">항목 내역</h3>
             </div>
             <div className="overflow-x-auto">

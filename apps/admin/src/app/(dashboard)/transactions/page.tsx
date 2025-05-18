@@ -108,7 +108,7 @@ export default function TransactionsPage() {
         <div className="overflow-x-auto w-full">
           <table className="w-full min-w-[1000px]"> 
             <thead>
-              <tr className="border-b border-gray-100">
+              <tr className="border-b border-gray-100 bg-gray-50">
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">거래 ID</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">사용자 이름</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">거래 유형</th>
@@ -134,8 +134,25 @@ export default function TransactionsPage() {
                 </tr>
               ) : (
                 transactions.map((transaction) => {
-                  const date = formatDate(transaction.createdAt[0], transaction.createdAt[1], transaction.createdAt[2]);
-                  const time = formatTime(transaction.createdAt[3], transaction.createdAt[4], transaction.createdAt[5]);
+                  const [year, month, day, hour, minute, second] = transaction.createdAt;
+                  const data = new Date(
+                    Number(year),
+                    Number(month) - 1,
+                    Number(day),
+                    Number(hour) + 9,
+                    Number(minute),
+                    Number(second)
+                  );
+                  const date = data.toLocaleDateString("ko-KR", {
+                    year: "2-digit",
+                    month: "2-digit",
+                    day: "2-digit"
+                  }).replaceAll('. ', '.').replace(/\.$/, '');
+                  const time = data.toLocaleTimeString("ko-KR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit"
+                  });
                   const isCharge = transaction.type === "CHARGE";
 
                   return (
@@ -145,7 +162,7 @@ export default function TransactionsPage() {
                       className="hover:bg-gray-50 transition-colors cursor-pointer"
                     >
                       <td className="px-6 py-4">
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm font-normal text-gray-400">
                           {transaction.id}
                         </span>
                       </td>

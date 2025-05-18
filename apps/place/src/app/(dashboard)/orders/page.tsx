@@ -25,30 +25,30 @@ interface OrderResponse {
 
 function OrderStatusBadge({ status }: { status: OrderStatus }) {
   const statusConfig: Record<OrderStatus, { label: string; className: string }> = {
-    PENDING: { 
-      label: "대기중", 
-      className: "bg-yellow-50 text-yellow-600 border-yellow-200" 
+    PENDING: {
+      label: "대기중",
+      className: "bg-yellow-50 text-yellow-600 border-yellow-200"
     },
-    PAID: { 
-      label: "결제완료", 
-      className: "bg-green-50 text-green-600 border-green-200" 
+    PAID: {
+      label: "결제완료",
+      className: "bg-green-50 text-green-600 border-green-200"
     },
-    COMPLETED: { 
-      label: "처리완료", 
-      className: "bg-blue-50 text-blue-600 border-blue-200" 
+    COMPLETED: {
+      label: "처리완료",
+      className: "bg-blue-50 text-blue-600 border-blue-200"
     },
-    CANCELED: { 
-      label: "취소됨", 
-      className: "bg-gray-50 text-gray-600 border-gray-200" 
+    CANCELED: {
+      label: "취소됨",
+      className: "bg-gray-50 text-gray-600 border-gray-200"
     },
-    EXPIRED: { 
-      label: "만료됨", 
-      className: "bg-red-50 text-red-600 border-red-200" 
+    EXPIRED: {
+      label: "만료됨",
+      className: "bg-red-50 text-red-600 border-red-200"
     },
   };
 
   const config = statusConfig[status];
-  
+
   return (
     <span className={`text-xs px-2 py-1 rounded border ${config.className}`}>
       {config.label}
@@ -86,91 +86,109 @@ export default function OrdersPage() {
     });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-2xl font-medium">주문 관리</h1>
-          <p className="text-gray-500 mt-1">
-            총 {filteredOrders.length}개의 주문
-          </p>
+    <div className="w-full max-w-[1200px] mx-auto px-6 py-8">
+      {/* 헤더 */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center space-x-4">
+          <div>
+            <h1 className="text-2xl font-medium text-gray-900">주문 관리</h1>
+            <p className="text-gray-500 mt-1">
+              총 {filteredOrders.length}개의 주문
+            </p>
+          </div>
         </div>
-        <Button 
+        <Button
           onClick={() => refetch()}
-          className="bg-blue-500 hover:bg-blue-600"
+          className="inline-flex items-center h-10 px-4 bg-[#4990FF] text-white rounded-lg text-sm font-medium hover:bg-[#4990FF]/90 transition-colors"
         >
-          <RefreshCw size={18} className={`mr-2 ${isLoading ? "animate-spin" : ""}`} />
+          <RefreshCw size={16} className={`mr-1.5 ${isLoading ? "animate-spin" : ""}`} />
           새로고침
         </Button>
       </div>
 
-      <div className="border rounded-lg bg-white p-4 mb-6 flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-2">
-          <Filter size={16} className="text-gray-500" />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as OrderStatus | "")}
-            className="border rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="">모든 상태</option>
-            <option value="PENDING">대기중</option>
-            <option value="PAID">결제완료</option>
-            <option value="COMPLETED">처리완료</option>
-            <option value="CANCELED">취소됨</option>
-            <option value="EXPIRED">만료됨</option>
-          </select>
-        </div>
+      {/* 필터 영역 */}
+      <div className="bg-white rounded-lg border border-gray-100 p-4 mb-6">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-2">
+            <Filter size={16} className="text-gray-400" />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as OrderStatus | "")}
+              className="h-10 pl-4 pr-10 bg-white border border-gray-200 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[#4990FF]/20 focus:border-[#4990FF]"
+            >
+              <option value="">모든 상태</option>
+              <option value="PENDING">대기중</option>
+              <option value="PAID">결제완료</option>
+              <option value="COMPLETED">처리완료</option>
+              <option value="CANCELED">취소됨</option>
+              <option value="EXPIRED">만료됨</option>
+            </select>
+          </div>
 
-        <Button
-          onClick={() => setSortDirection(prev => prev === "ASC" ? "DESC" : "ASC")}
-          variant="outline"
-        >
-          {sortDirection === "DESC" ? "최신순" : "오래된순"}
-        </Button>
+          <Button
+            onClick={() => setSortDirection(prev => prev === "ASC" ? "DESC" : "ASC")}
+            className="inline-flex items-center h-10 px-4 border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+            variant="outline"
+          >
+            {sortDirection === "DESC" ? "최신순" : "오래된순"}
+          </Button>
+        </div>
       </div>
 
+      {/* 테이블 */}
       {isLoading ? (
-        <div className="flex justify-center items-center py-16">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <div className="bg-white rounded-lg border border-gray-100 py-32 flex justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-[#4990FF]" />
         </div>
       ) : (
-        <div className="border rounded-lg bg-white overflow-hidden">
+        <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
           {filteredOrders.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gray-50 text-gray-500 text-sm">
-                    <th className="px-4 py-3 text-left font-medium">주문번호</th>
-                    <th className="px-4 py-3 text-left font-medium">키오스크번호</th>
-                    <th className="px-4 py-3 text-left font-medium">상태</th>
-                    <th className="px-4 py-3 text-left font-medium">주문금액</th>
-                    <th className="px-4 py-3 text-left font-medium">주문일시</th>
-                    <th className="px-4 py-3 text-left font-medium">만료일시</th>
+                  <tr className="bg-gray-50 border-b border-gray-100">
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">주문번호</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">키오스크번호</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">상태</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">주문금액</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">주문일시</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">만료일시</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-gray-50">
                   {filteredOrders.map((order) => (
                     <tr
                       key={order.id}
                       onClick={() => handleViewDetails(order.id)}
-                      className="border-t hover:bg-gray-50"
+                      className="hover:bg-gray-50 transition-colors cursor-pointer"
                     >
-                      <td className="px-4 py-3 text-sm font-medium">
-                        #{order.id}
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-medium text-gray-900">
+                          #{order.id}
+                        </span>
                       </td>
-                      <td className="px-4 py-3 text-sm">
-                        {order.boothOrderNumber}
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-600">
+                          {order.boothOrderNumber}
+                        </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-6 py-4">
                         <OrderStatusBadge status={order.status} />
                       </td>
-                      <td className="px-4 py-3 text-sm">
-                        {order.totalAmount.toLocaleString()}원
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-900">
+                          {order.totalAmount.toLocaleString()}원
+                        </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-500">
-                        {dayjs(order.createdAt).format("YYYY.MM.DD HH:mm")}
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-500">
+                          {dayjs(order.createdAt).format("YYYY.MM.DD HH:mm")}
+                        </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-500">
-                        {dayjs(order.expiresAt).format("YYYY.MM.DD HH:mm")}
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-500">
+                          {dayjs(order.expiresAt).format("YYYY.MM.DD HH:mm")}
+                        </span>
                       </td>
                     </tr>
                   ))}
@@ -178,7 +196,7 @@ export default function OrdersPage() {
               </table>
             </div>
           ) : (
-            <div className="text-center py-12 text-gray-500">
+            <div className="px-6 py-32 text-center text-gray-500">
               조회된 주문이 없습니다
             </div>
           )}

@@ -5,6 +5,7 @@ import api from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 
 interface BoothType {
   id: string;
@@ -37,6 +38,8 @@ const sortBooths = (booths: BoothType[], { field, order }: SortConfig): BoothTyp
 };
 
 export default function BoothsPage() {
+  const router = useRouter();
+
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     field: "id",
     order: "asc"
@@ -82,6 +85,10 @@ export default function BoothsPage() {
       <ArrowDown size={14} />
     );
   };
+  
+  const handleRowClick = (id: string) => {
+    router.push(`/booths/${id}`)
+  }
 
   return (
     <div className="w-full max-w-[1200px] mx-auto px-6 py-8">
@@ -103,7 +110,7 @@ export default function BoothsPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-100">
+              <tr className="border-b border-gray-100 bg-gray-50">
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
                   <button
                     onClick={() => handleSortClick("id")}
@@ -149,9 +156,10 @@ export default function BoothsPage() {
                 </tr>
               ) : (
                 sortedBooths.map((booth) => (
-                  <tr 
+                  <tr
                     key={booth.id}
-                    className="hover:bg-gray-50 transition-colors"
+                    onClick={() => handleRowClick(booth.id)}
+                    className="hover:bg-gray-50 transition-colors cursor-pointer"
                   >
                     <td className="px-6 py-4">
                       <span className="text-sm font-medium text-gray-900">
@@ -179,10 +187,15 @@ export default function BoothsPage() {
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="text-sm text-gray-900">
-                          {formatDate(booth.updatedAt[0], booth.updatedAt[1], booth.updatedAt[2])}
+                          {formatDate(booth.createdAt[0], booth.createdAt[1], booth.createdAt[2])}
                         </span>
                         <span className="text-xs text-gray-500 mt-0.5">
-                          {formatTime(booth.updatedAt[3], booth.updatedAt[4], booth.updatedAt[5])}
+                          {new Date(...booth.createdAt).toLocaleString("ko-KR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                            hour12: false
+                          })}
                         </span>
                       </div>
                     </td>
