@@ -329,58 +329,66 @@ export default function BoothRankingPage() {
   };
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-2xl font-medium text-gray-900">부스 랭킹</h1>
-          <p className="text-gray-500 mt-1">
-            현재 운영중인 부스의 매출 현황을 실시간으로 확인할 수 있습니다
-          </p>
-          <div className="mt-4 space-x-4">
-            {/* <button
+    <div className="min-h-screen bg-white">
+      <div className="max-w-[960px] mx-auto px-5 py-7">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-medium text-gray-900">부스 랭킹</h1>
+            <div className="flex items-center h-7 px-2 bg-[#4990FF]/10 rounded">
+              <span className="text-xs font-medium text-[#4990FF]">
+                총 {boothRankingData.length}개 부스
+              </span>
+            </div>
+          </div>
+          
+          {/* 차트 타입 선택 버튼 (주석 처리된 부분) */}
+          {/* <div className="flex gap-2">
+            <button
               onClick={() => setChartType('bar')}
-              className={`px-4 py-2 rounded ${
-                chartType === 'bar' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-100 text-gray-700'
-              }`}
+              className={cn(
+                "h-9 px-4 rounded-lg text-sm font-medium transition-colors",
+                chartType === 'bar'
+                  ? "bg-[#4990FF] text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              )}
             >
               막대 그래프
-            </button> */}
-            {/* <button
+            </button>
+            <button
               onClick={() => setChartType('line')}
-              className={`px-4 py-2 rounded ${
-                chartType === 'line' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-100 text-gray-700'
-              }`}
+              className={cn(
+                "h-9 px-4 rounded-lg text-sm font-medium transition-colors",
+                chartType === 'line'
+                  ? "bg-[#4990FF] text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              )}
             >
               시계열 그래프
-            </button> */}
-          </div>
+            </button>
+          </div> */}
         </div>
-      </div>
 
-      <div className="bg-white rounded-lg border border-gray-100 p-6">
-        <div className="overflow-x-auto">
+        <div className="rounded-lg border border-gray-200 overflow-hidden">
           {boothRankingData.length > 0 ? (
-            <div style={{ height: '500px' }}>
-              {chartType === 'bar' ? (
-                <Bar
-                  ref={chartRef as any}
-                  options={barOptions} 
-                  data={barData}
-                />
-              ) : (
-                <Line
-                  ref={chartRef as any}
-                  options={lineOptions}
-                  data={lineData}
-                />
-              )}
+            <div className="p-6">
+              <div style={{ height: '600px' }}>
+                {chartType === 'bar' ? (
+                  <Bar
+                    ref={chartRef as any}
+                    options={barOptions} 
+                    data={barData}
+                  />
+                ) : (
+                  <Line
+                    ref={chartRef as any}
+                    options={lineOptions}
+                    data={lineData}
+                  />
+                )}
+              </div>
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="px-6 py-24 text-center text-gray-500">
               표시할 데이터가 없습니다
             </div>
           )}

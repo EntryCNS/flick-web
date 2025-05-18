@@ -1,49 +1,77 @@
 "use client";
 
-import { Loader2, Store, ArrowUp, ArrowDown } from "lucide-react";
-import api from "@/lib/api";
+import { useMemo, useState } from "react";
+import { Loader2, Store, ChevronDown, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { format } from "date-fns";
+import { ko } from "date-fns/locale";
+import api from "@/lib/api";
+
+type LocalDateTime = string | number[];
 
 interface BoothType {
   id: string;
   name: string;
   description: string;
-  status: "PENDING" | "APPROVED" | "REJECTED";
   totalSales: number;
-  createdAt: string;
-  updatedAt: string[];
+  createdAt: LocalDateTime;
+  updatedAt: LocalDateTime;
 }
 
-type SortField = "id" | "totalSales";
-type SortOrder = "asc" | "desc";
+type SortOption = {
+  field: "id" | "totalSales" | "name";
+  order: "asc" | "desc";
+  label: string;
+};
 
-interface SortConfig {
-  field: SortField;
-  order: SortOrder;
-}
+const sortOptions: SortOption[] = [
+  { field: "id", order: "asc", label: "번호 오름차순" },
+  { field: "id", order: "desc", label: "번호 내림차순" },
+  { field: "totalSales", order: "desc", label: "매출 높은 순" },
+  { field: "totalSales", order: "asc", label: "매출 낮은 순" },
+  { field: "name", order: "asc", label: "이름 오름차순" },
+  { field: "name", order: "desc", label: "이름 내림차순" },
+];
 
-const sortBooths = (booths: BoothType[], { field, order }: SortConfig): BoothType[] => {
+const formatDateTime = (datetime: LocalDateTime) => {
+  if (Array.isArray(datetime)) {
+    const [year, month, day, hour, minute] = datetime;
+    const date = new Date(+year, +month - 1, +day, +hour, +minute);
+    return {
+      date: format(date, 'MM.dd', { locale: ko }),
+      time: format(date, 'HH:mm', { locale: ko })
+    };
+  }
+  const date = new Date(datetime);
+  return {
+    date: format(date, 'MM.dd', { locale: ko }),
+    time: format(date, 'HH:mm', { locale: ko })
+  };
+};
+
+const sortBooths = (booths: BoothType[], sortOption: SortOption): BoothType[] => {
   return [...booths].sort((a, b) => {
-    if (field === "id") {
+    if (sortOption.field === "id") {
       const idA = parseInt(a.id);
       const idB = parseInt(b.id);
-      return order === "asc" ? idA - idB : idB - idA;
+      return sortOption.order === "asc" ? idA - idB : idB - idA;
+    } else if (sortOption.field === "name") {
+      return sortOption.order === "asc" 
+        ? a.name.localeCompare(b.name) 
+        : b.name.localeCompare(a.name);
     } else {
-      return order === "asc" ? a.totalSales - b.totalSales : b.totalSales - a.totalSales;
+      return sortOption.order === "asc" ? a.totalSales - b.totalSales : b.totalSales - a.totalSales;
     }
   });
 };
 
 export default function BoothsPage() {
   const router = useRouter();
-
-  const [sortConfig, setSortConfig] = useState<SortConfig>({
-    field: "id",
-    order: "asc"
-  });
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedSort, setSelectedSort] = useState<SortOption>(sortOptions[0]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const { data: booths, isLoading } = useQuery<BoothType[]>({
     queryKey: ["booths"],
@@ -53,157 +81,131 @@ export default function BoothsPage() {
     }
   });
 
-  const handleSortClick = (field: SortField) => {
-    setSortConfig(prev => ({
-      field,
-      order: prev.field === field && prev.order === "asc" ? "desc" : "asc"
-    }));
-  };
-
-  const sortedBooths = useMemo(() => {
+  const filteredAndSortedBooths = useMemo(() => {
     if (!booths) return [];
-    return sortBooths(booths, sortConfig);
-  }, [booths, sortConfig]);
-
-  const formatDate = (year: string, month: string, day: string) => {
-    return `${year}-${month.toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
-  };
-
-  const formatTime = (hour: string, minute: string, second: string) => {
-    return `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}:${second.toString().padStart(2, "0")}`;
-  };
+    
+    return sortBooths(
+      booths.filter(booth => 
+        !searchQuery.trim() || 
+        booth.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+        booth.description.toLowerCase().includes(searchQuery.toLowerCase().trim())
+      ),
+      selectedSort
+    );
+  }, [booths, selectedSort, searchQuery]);
 
   const formatCurrency = (amount: number) => {
     return amount.toLocaleString('ko-KR') + '원';
   };
-
-  const renderSortIcon = (field: SortField) => {
-    if (sortConfig.field !== field) return null;
-    return sortConfig.order === "asc" ? (
-      <ArrowUp size={14} />
-    ) : (
-      <ArrowDown size={14} />
-    );
-  };
   
-  const handleRowClick = (id: string) => {
-    router.push(`/booths/${id}`)
-  }
-
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-2xl font-medium text-gray-900">부스 목록</h1>
-          <p className="text-gray-500 mt-1">
-            현재 운영중인 부스의 목록을 확인할 수 있습니다
-          </p>
-        </div>
-        <div className="flex items-center h-8 px-3 bg-[#4990FF]/10 rounded-lg">
-          <span className="text-sm font-medium text-[#4990FF]">
-            총 {booths?.length || 0}개 부스
-          </span>
-        </div>
-      </div>
+    <div className="min-h-screen bg-white">
+      <div className="max-w-[960px] mx-auto px-5 py-6">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-medium text-gray-900">부스 관리</h1>
+            <div className="flex items-center h-7 px-2 bg-[#4990FF]/10 rounded">
+              <span className="text-xs font-medium text-[#4990FF]">
+                총 {booths?.length || 0}개
+              </span>
+            </div>
+          </div>
 
-      <div className="bg-white rounded-lg border border-gray-100">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
-                  <button
-                    onClick={() => handleSortClick("id")}
-                    className="inline-flex items-center gap-1 hover:text-[#4990FF] transition-colors"
-                  >
-                    ID
-                    {renderSortIcon("id")}
-                  </button>
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
-                  부스 이름
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
-                  <button
-                    onClick={() => handleSortClick("totalSales")}
-                    className="inline-flex items-center gap-1 hover:text-[#4990FF] transition-colors"
-                  >
-                    총 매출
-                    {renderSortIcon("totalSales")}
-                  </button>
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
-                  수정일
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-20 text-center">
-                    <Loader2 size={36} className="mx-auto text-gray-400 animate-spin" />
-                  </td>
-                </tr>
-              ) : !sortedBooths.length ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-20 text-center">
-                    <div className="flex flex-col items-center">
-                      <Store className="h-12 w-12 text-gray-400" />
-                      <h3 className="mt-4 text-sm font-medium text-gray-900">등록된 부스 없음</h3>
-                      <p className="mt-1 text-sm text-gray-500">아직 등록된 부스가 없습니다</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                sortedBooths.map((booth) => (
-                  <tr
-                    key={booth.id}
-                    onClick={() => handleRowClick(booth.id)}
-                    className="hover:bg-gray-50 transition-colors cursor-pointer"
-                  >
-                    <td className="px-6 py-4">
-                      <span className="text-sm font-medium text-gray-900">
-                        {booth.id}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-gray-900">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="부스명으로 검색"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-64 h-9 pl-9 pr-4 rounded-lg text-sm bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4990FF]/20 focus:border-[#4990FF]"
+              />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            </div>
+
+            <div className="relative">
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="h-9 px-3 pr-8 rounded-lg text-sm bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4990FF]/20 focus:border-[#4990FF] font-medium text-gray-700"
+              >
+                {selectedSort.label}
+              </button>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg border border-gray-200 shadow-lg overflow-hidden z-10">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={`${option.field}-${option.order}`}
+                      onClick={() => {
+                        setSelectedSort(option);
+                        setIsDropdownOpen(false);
+                      }}
+                      className={cn(
+                        "w-full px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors",
+                        selectedSort === option ? "text-[#4990FF] font-medium" : "text-gray-700"
+                      )}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {isLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="animate-pulse">
+                  <div className="h-[68px] bg-gray-100 rounded-lg" />
+                </div>
+              ))}
+            </div>
+          ) : !filteredAndSortedBooths.length ? (
+            <div className="py-24 text-center text-gray-500">
+              <Store className="w-8 h-8 mx-auto text-gray-400" />
+              <p className="mt-4">등록된 부스가 없습니다</p>
+            </div>
+          ) : (
+            filteredAndSortedBooths.map((booth) => {
+              const datetime = formatDateTime(booth.createdAt);
+              return (
+                <div
+                  key={booth.id}
+                  onClick={() => router.push(`/booths/${booth.id}`)}
+                  className="group h-[68px] p-4 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center justify-between gap-4 h-full">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500">#{booth.id}</span>
+                        <h2 className="text-base font-medium text-gray-900 truncate group-hover:text-[#4990FF]">
                           {booth.name}
-                        </span>
-                        <span className="text-xs text-gray-500 mt-0.5 line-clamp-1">
-                          {booth.description}
-                        </span>
+                        </h2>
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
+                      <p className="text-sm text-gray-600 line-clamp-1 mt-1">
+                        {booth.description}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
                       <span className={cn(
                         "text-sm font-medium",
-                        sortConfig.field === "totalSales" ? "text-[#4990FF]" : "text-gray-900"
+                        selectedSort.field === "totalSales" ? "text-[#4990FF]" : "text-gray-900"
                       )}>
                         {formatCurrency(booth.totalSales)}
                       </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="text-sm text-gray-900">
-                          {formatDate(booth.createdAt[0], booth.createdAt[1], booth.createdAt[2])}
-                        </span>
-                        <span className="text-xs text-gray-500 mt-0.5">
-                          {new Date(...booth.createdAt).toLocaleString("ko-KR", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            second: "2-digit",
-                            hour12: false
-                          })}
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                      <time className="text-sm text-gray-400">
+                        {datetime.date}
+                      </time>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     </div>

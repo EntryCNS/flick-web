@@ -203,12 +203,12 @@ export default function OrdersPage() {
         </div>
       )}
 
-      {/* {selectedOrderId && (
+      {selectedOrderId && (
         <OrderDetailModal
           orderId={selectedOrderId}
           onClose={handleCloseModal}
         />
-      )} */}
+      )}
     </div>
   );
 }

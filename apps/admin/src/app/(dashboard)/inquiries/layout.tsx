@@ -1,10 +1,9 @@
 export const metadata = {
-  title: "문의 | Flick Admin",
-  description: "Flick Admin 문의 페이지",
+  title: "문의 | Flick 관리자",
 };
 
 
-export default function ChargeHistoryLayout({
+export default function InquiresLayout({
   children,
 }: {
   children: React.ReactNode;

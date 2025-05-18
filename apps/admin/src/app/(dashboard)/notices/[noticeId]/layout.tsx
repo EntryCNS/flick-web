@@ -1,9 +1,9 @@
 export const metadata = {
-  title: "공지사항 | Flick 관리자",
+  title: "공지사항 상세 | Flick 관리자",
 };
 
 
-export default function NoticesLayout({
+export default function NoticeDetailLayout({
   children,
 }: {
   children: React.ReactNode;

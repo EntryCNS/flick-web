@@ -1,9 +1,8 @@
 export const metadata = {
-  title: "공지사항 작성 | Flick Admin",
-  description: "Flick Admin 공지사항 작성 페이지",
+  title: "공지사항 작성 | Flick 관리자",
 };
 
-export default function ChargeHistoryLayout({
+export default function NewNoticeLayout({
   children,
 }: {
   children: React.ReactNode;

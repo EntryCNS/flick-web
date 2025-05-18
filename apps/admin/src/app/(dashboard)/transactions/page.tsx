@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useState } from "react";
 import { Loader2, ArrowUpRight, ArrowDownRight } from "lucide-react";
@@ -6,6 +6,8 @@ import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
 import { useRouter } from "next/navigation";
+import { format } from "date-fns";
+import { ko } from "date-fns/locale";
 
 interface TransactionType {
   id: number;
@@ -23,7 +25,7 @@ interface TransactionType {
     name: string;
   },
   memo: string;
-  createdAt: string;
+  createdAt: string[];
 }
 
 interface PaginatedResponse {
@@ -37,12 +39,13 @@ interface PaginatedResponse {
   empty: boolean;
 }
 
-const formatDate = (year: string, month: string, day: string) => {
-  return `${year}-${month.toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
-};
-
-const formatTime = (hour: string, minute: string, second: string) => {
-  return `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}:${second.toString().padStart(2, "0")}`;
+const formatDateTime = (dateArr: string[]) => {
+  const [year, month, day, hour, minute, second] = dateArr;
+  const date = new Date(+year, +month - 1, +day, +hour, +minute, +second);
+  return {
+    date: format(date, 'MM.dd', { locale: ko }),
+    time: format(date, 'HH:mm', { locale: ko })
+  };
 };
 
 const formatCurrency = (amount: number) => {
@@ -52,7 +55,7 @@ const formatCurrency = (amount: number) => {
 export default function TransactionsPage() {
   const router = useRouter();
   const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 10;
+  const itemsPerPage = 15;
 
   const { data, isLoading } = useQuery<PaginatedResponse>({
     queryKey: ['transactions', currentPage],
@@ -67,15 +70,10 @@ export default function TransactionsPage() {
     },
   });
 
-  const handleRowClick = (id: number) => {
-    router.push(`/transactions/${id}`)
-  }
-
   const transactions = data?.content ?? [];
   const totalElements = data?.totalElements ?? 0;
   const totalPages = data?.totalPages ?? 1;
 
-  // 페이지네이션을 위한 계산 함수
   const getPageNumbers = () => {
     const maxPages = 5;
     const halfMax = Math.floor(maxPages / 2);
@@ -94,186 +92,135 @@ export default function TransactionsPage() {
   };
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-medium text-gray-900">거래 내역</h1>
-          <p className="text-gray-500 mt-1">
-            전체 거래 내역을 확인할 수 있습니다
-          </p>
+    <div className="min-h-screen bg-white">
+      <div className="max-w-[960px] mx-auto px-5 py-7">
+        <div className="flex items-center gap-3 mb-8">
+          <h1 className="text-xl font-medium text-gray-900">거래 내역</h1>
+          <div className="flex items-center h-7 px-2 bg-[#4990FF]/10 rounded">
+            <span className="text-xs font-medium text-[#4990FF]">
+              총 {totalElements}건
+            </span>
+          </div>
         </div>
-      </div>
 
-      <div className="bg-white rounded-lg border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto w-full">
-          <table className="w-full min-w-[1000px]"> 
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">거래 ID</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">사용자 이름</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">거래 유형</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">부스 명</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">상품</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">거래 금액</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">거래 후 잔액</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">거래 일시</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={8} className="px-6 py-20 text-center">
-                    <Loader2 className="mx-auto animate-spin text-gray-400" size={36} />
-                  </td>
+        <div className="rounded-lg border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-50">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">번호</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">유형</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">사용자</th>
+                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-500">금액/잔액</th>
+                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-500">일시</th>
                 </tr>
-              ) : transactions.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-6 py-20 text-center text-gray-500">
-                    거래 내역이 없습니다
-                  </td>
-                </tr>
-              ) : (
-                transactions.map((transaction) => {
-                  const [year, month, day, hour, minute, second] = transaction.createdAt;
-                  const data = new Date(
-                    Number(year),
-                    Number(month) - 1,
-                    Number(day),
-                    Number(hour) + 9,
-                    Number(minute),
-                    Number(second)
-                  );
-                  const date = data.toLocaleDateString("ko-KR", {
-                    year: "2-digit",
-                    month: "2-digit",
-                    day: "2-digit"
-                  }).replaceAll('. ', '.').replace(/\.$/, '');
-                  const time = data.toLocaleTimeString("ko-KR", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit"
-                  });
-                  const isCharge = transaction.type === "CHARGE";
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-24 text-center">
+                      <Loader2 className="mx-auto animate-spin text-gray-400 w-8 h-8" />
+                    </td>
+                  </tr>
+                ) : transactions.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-24 text-center text-gray-500">
+                      거래 내역이 없습니다
+                    </td>
+                  </tr>
+                ) : (
+                  transactions.map((transaction) => {
+                    const datetime = formatDateTime(transaction.createdAt);
+                    const isCharge = transaction.type === "CHARGE";
 
-                  return (
-                    <tr
-                      key={transaction.id}
-                      onClick={() => handleRowClick(transaction.id)}
-                      className="hover:bg-gray-50 transition-colors cursor-pointer"
-                    >
-                      <td className="px-6 py-4">
-                        <span className="text-sm font-normal text-gray-400">
-                          {transaction.id}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm font-medium text-gray-900">
-                          {transaction.user.name}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
+                    return (
+                      <tr
+                        key={transaction.id}
+                        onClick={() => router.push(`/transactions/${transaction.id}`)}
+                        className="hover:bg-gray-50 cursor-pointer transition-colors group"
+                      >
+                        <td className="px-6 py-4">
+                          <span className="text-sm text-gray-500">
+                            #{transaction.id}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
                           <span className={cn(
-                            "flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium",
-                            isCharge
-                              ? "bg-blue-50 text-blue-600"
-                              : "bg-red-50 text-red-600"
+                            "inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium",
+                            isCharge ? "bg-blue-50 text-blue-600" : "bg-red-50 text-red-600"
                           )}>
-                            {isCharge ? (
-                              <ArrowDownRight size={14} />
-                            ) : (
-                              <ArrowUpRight size={14} />
-                            )}
+                            {isCharge ? <ArrowDownRight size={14} /> : <ArrowUpRight size={14} />}
                             {isCharge ? "충전" : "결제"}
                           </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm font-medium text-gray-900">
-                          {!isCharge ? transaction.booth.name : "-"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm font-medium text-gray-900">
-                          {!isCharge ? transaction.product.name : "-"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={cn(
-                          "text-sm font-medium",
-                          isCharge ? "text-blue-600" : "text-red-600"
-                        )}>
-                          {isCharge ? "+" : "-"}{formatCurrency(transaction.amount)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm text-gray-900">
-                          {formatCurrency(transaction.balanceAfter)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="text-sm text-gray-900">{date}</span>
-                          <span className="text-xs text-gray-500">{time}</span>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-sm font-medium text-gray-900 group-hover:text-[#4990FF]">
+                            {transaction.user.name}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div>
+                            <span className={cn(
+                              "text-sm font-medium",
+                              isCharge ? "text-blue-600" : "text-red-600"
+                            )}>
+                              {isCharge ? "+" : "-"}{formatCurrency(transaction.amount)}
+                            </span>
+                            <div className="text-xs text-gray-500 mt-0.5">
+                              {formatCurrency(transaction.balanceAfter)}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex flex-col items-end">
+                            <span className="text-sm text-gray-900">{datetime.date}</span>
+                            <span className="text-xs text-gray-500 mt-0.5">{datetime.time}</span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <span className="text-sm text-gray-500">
-            총 <span className="font-medium text-gray-900">{totalElements}</span>개의 거래
-          </span>
-          {totalPages > 1 && (
-            <div className="flex items-center gap-1">
+        {totalPages > 1 && (
+          <div className="mt-8 flex items-center justify-center gap-1">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+              disabled={currentPage === 0}
+              className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-40 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              &lt;
+            </button>
+            
+            {getPageNumbers().map(pageNum => (
               <button
-                onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
-                disabled={currentPage === 0}
+                key={pageNum}
+                onClick={() => setCurrentPage(pageNum)}
                 className={cn(
-                  "inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 transition-colors",
-                  currentPage === 0
-                    ? "text-gray-300 cursor-not-allowed"
-                    : "text-gray-500 hover:bg-gray-50"
+                  "w-8 h-8 text-sm rounded-full transition-colors",
+                  currentPage === pageNum
+                    ? "bg-[#4990FF] text-white"
+                    : "text-gray-600 hover:bg-gray-100"
                 )}
               >
-                &lt;
+                {pageNum + 1}
               </button>
-              {getPageNumbers().map(pageNum => (
-                <button
-                  key={pageNum}
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={cn(
-                    "inline-flex items-center justify-center h-8 min-w-[2rem] rounded-lg text-sm font-medium transition-colors",
-                    currentPage === pageNum
-                      ? "bg-[#4990FF] text-white"
-                      : "text-gray-500 hover:bg-gray-50 border border-gray-200"
-                  )}
-                >
-                  {pageNum + 1}
-                </button>
-              ))}
-              <button
-                onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
-                disabled={currentPage === totalPages - 1}
-                className={cn(
-                  "inline-flex items-center justify-center h-8 w-8 rounded-lg border border-gray-200 transition-colors",
-                  currentPage === totalPages - 1
-                    ? "text-gray-300 cursor-not-allowed"
-                    : "text-gray-500 hover:bg-gray-50"
-                )}
-              >
-                &gt;
-              </button>
-            </div>
-          )}
-        </div>
+            ))}
+
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+              disabled={currentPage === totalPages - 1}
+              className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-40 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              &gt;
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 }
-

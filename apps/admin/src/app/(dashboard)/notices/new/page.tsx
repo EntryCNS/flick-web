@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { AlertCircle, Send, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -19,7 +19,15 @@ const noticeSchema = z.object({
 
 type NoticeFormData = z.infer<typeof noticeSchema>;
 
-export default function AdminNoticeForm() {
+interface NoticeResponse {
+  id: number;
+  title: string;
+  content: string;
+  isPinned: boolean;
+  createdAt: string[];
+}
+
+export default function NewNoticePage() {
   const router = useRouter();
   
   const {
@@ -36,136 +44,119 @@ export default function AdminNoticeForm() {
     }
   });
 
-  const { mutate: createNotice, isLoading } = useMutation({
-    mutationFn: async (data: NoticeFormData) => {
-      const response = await api.post("/notices", data);
+  const { mutate: createNotice, isSuccess } = useMutation<NoticeResponse, Error, NoticeFormData>({
+    mutationFn: async (data) => {
+      const response = await api.post<NoticeResponse>("/notices", data);
       return response.data;
     },
     onSuccess: () => {
       toast.success("공지사항이 등록되었습니다");
-      router.push("/notices");
+      router.replace("/notices");
     },
-    onError: (error) => {
-      console.error('Create notice error:', error);
+    onError: () => {
       toast.error("공지사항 등록에 실패했습니다");
     },
   });
 
-  const onSubmit = useCallback(async (data: NoticeFormData) => {
-    try {
-      await createNotice(data);
-    } catch (error) {
-      console.error('Form submission error:', error);
-    }
+  const onSubmit = useCallback((data: NoticeFormData) => {
+    createNotice(data);
   }, [createNotice]);
 
   const watchedTitle = watch("title");
   const watchedContent = watch("content");
-  const isFormDisabled = isSubmitting || isLoading || !watchedTitle?.trim() || !watchedContent?.trim();
+  const isFormDisabled = isSubmitting || isSuccess || !watchedTitle?.trim() || !watchedContent?.trim();
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto px-6 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-medium text-gray-900">공지사항 작성</h1>
-          <p className="text-gray-500 mt-1">
-            새로운 공지사항을 작성하고 등록하세요
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="inline-flex items-center h-10 px-4 border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 mr-1.5" />
-            돌아가기
-          </button>
-          <button
-            type="submit"
-            onClick={handleSubmit(onSubmit)}
-            disabled={isFormDisabled}
-            className={cn(
-              "inline-flex items-center h-10 px-4 rounded-lg text-sm font-medium transition-colors",
-              "bg-[#4990FF] text-white hover:bg-[#4990FF]/90",
-              "disabled:bg-[#4990FF]/50 disabled:cursor-not-allowed"
-            )}
-          >
-            <Send className="w-4 h-4 mr-1.5" />
-            {isLoading ? "등록 중..." : "등록하기"}
-          </button>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white rounded-lg border border-gray-100 p-6">
-        <div>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              {...register("isPinned")}
-              className="w-4 h-4 text-[#4990FF] rounded border-gray-300 focus:ring-[#4990FF]/20"
-            />
-            <span className="text-sm font-medium text-gray-700">상단 고정</span>
-          </label>
-          <p className="mt-1 text-xs text-gray-500 ml-6">
-            상단 고정된 공지사항은 목록의 최상단에 표시됩니다
-          </p>
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-gray-700">
-            제목
-          </label>
-          <input
-            type="text"
-            {...register("title")}
-            placeholder="공지사항 제목을 입력하세요"
-            className={cn(
-              "w-full h-11 px-3.5 border rounded-lg text-sm",
-              "placeholder:text-gray-400",
-              "focus:outline-none focus:ring-2 focus:ring-[#4990FF]/20 focus:border-[#4990FF]",
-              errors.title ? "border-red-500" : "border-gray-200"
-            )}
-          />
-          {errors.title && (
-            <p className="text-sm text-red-500 mt-1">{errors.title.message}</p>
-          )}
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-gray-700">
-            내용
-          </label>
-          <textarea
-            {...register("content")}
-            placeholder="공지사항 내용을 입력하세요"
-            rows={12}
-            className={cn(
-              "w-full px-3.5 py-3 border rounded-lg text-sm",
-              "placeholder:text-gray-400",
-              "focus:outline-none focus:ring-2 focus:ring-[#4990FF]/20 focus:border-[#4990FF]",
-              "resize-none",
-              errors.content ? "border-red-500" : "border-gray-200"
-            )}
-          />
-          {errors.content && (
-            <p className="text-sm text-red-500 mt-1">{errors.content.message}</p>
-          )}
-        </div>
-
-        <div className="flex items-start gap-3 p-4 bg-amber-50/60 rounded-lg border border-amber-100">
-          <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
-          <div>
-            <h3 className="text-sm font-medium text-amber-800">
-              등록 전 확인사항
-            </h3>
-            <ul className="mt-1.5 text-sm text-amber-700 space-y-1">
-              <li>• 공지사항 등록 후에도 수정이 가능합니다.</li>
-              <li>• 새로운 공지는 사용자에게 알림이 발송됩니다.</li>
-            </ul>
+    <div className="min-h-screen bg-white">
+      <div className="max-w-[960px] mx-auto px-5 py-6">
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-1">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <h1 className="text-xl font-medium text-gray-900">새 공지사항</h1>
           </div>
         </div>
-      </form>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <div>
+            <label className="inline-flex items-center gap-2 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded transition-colors">
+              <input
+                type="checkbox"
+                {...register("isPinned")}
+                className="w-4 h-4 text-[#4990FF] rounded border-gray-300 focus:ring-[#4990FF]/20"
+              />
+              <span className="text-sm font-medium text-gray-700">상단 고정</span>
+            </label>
+          </div>
+
+          <div className="space-y-1.5">
+            <input
+              type="text"
+              {...register("title")}
+              placeholder="제목을 입력하세요"
+              className={cn(
+                "w-full px-0 py-2 text-lg font-medium placeholder:text-gray-400",
+                "border-0 border-b focus:border-b-2 focus:border-[#4990FF]",
+                "focus:outline-none focus:ring-0",
+                errors.title ? "border-red-500" : "border-gray-200"
+              )}
+            />
+            {errors.title && (
+              <p className="text-sm text-red-500">{errors.title.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <textarea
+              {...register("content")}
+              placeholder="내용을 입력하세요"
+              rows={20}
+              className={cn(
+                "w-full px-0 py-4 text-base text-gray-600",
+                "border-0 focus:ring-0 focus:outline-none",
+                "resize-none",
+                "placeholder:text-gray-400"
+              )}
+            />
+            {errors.content && (
+              <p className="text-sm text-red-500">{errors.content.message}</p>
+            )}
+          </div>
+        </form>
+
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100">
+          <div className="max-w-[960px] mx-auto px-5 py-4">
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="h-9 px-4 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSubmit(onSubmit)}
+                disabled={isFormDisabled}
+                className={cn(
+                  "h-9 px-4 text-sm font-medium rounded-lg transition-colors",
+                  "bg-[#4990FF] text-white hover:bg-[#4990FF]/90",
+                  "disabled:bg-[#4990FF]/50 disabled:cursor-not-allowed"
+                )}
+              >
+                <span className="flex items-center">
+                  <Send className="w-4 h-4 mr-1.5" />
+                  {isSuccess ? "등록됨" : "등록하기"}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
