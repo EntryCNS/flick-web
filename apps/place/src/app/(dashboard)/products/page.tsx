@@ -240,105 +240,120 @@ export default function ProductsPage() {
     }
   };
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-2xl font-medium">상품 관리</h1>
-          <p className="text-gray-500 mt-1">총 {products.length}개의 상품</p>
-        </div>
-        <Button
-          onClick={handleAddProduct}
-          className="bg-blue-500 hover:bg-blue-600"
-        >
-          <Plus size={18} className="mr-2" />
-          상품 추가
-        </Button>
-      </div>
-
-      {isLoading ? (
-        <div className="flex justify-center items-center py-16">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-        </div>
-      ) : (
-        <>
-          {products.length === 0 ? (
-            <div className="text-center py-16 border rounded-lg bg-gray-50">
-              <p className="text-gray-500 mb-4">등록된 상품이 없습니다</p>
-              <Button
-                onClick={handleAddProduct}
-                className="bg-blue-500 hover:bg-blue-600"
-              >
-                <Plus size={16} className="mr-1" />
-                상품 추가
-              </Button>
+    return (
+    <div className="min-h-screen bg-white">
+      <div className="max-w-[960px] mx-auto px-5 py-6">
+        {/* 헤더 수정 */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-medium text-gray-900">상품 관리</h1>
+            <div className="flex items-center h-7 px-2 bg-[#4990FF]/10 rounded">
+              <span className="text-xs font-medium text-[#4990FF]">
+                총 {products.length}개
+              </span>
             </div>
-          ) : (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={products.map((p) => p.id.toString())}
-                strategy={rectSortingStrategy}
-              >
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {products.map((product) => (
-                    <SortableProductCard
-                      key={product.id}
-                      product={product}
-                      onEdit={handleEditProduct}
-                      onDelete={deleteProduct}
-                    />
-                  ))}
-                </div>
-              </SortableContext>
-            </DndContext>
-          )}
-        </>
-      )}
+          </div>
+          <Button
+            onClick={handleAddProduct}
+            className="h-9 px-4 bg-[#4990FF] hover:bg-[#4990FF]/90 text-white text-sm"
+          >
+            <Plus className="w-4 h-4 mr-1.5" />
+            상품 추가
+          </Button>
+        </div>
 
-      {modalOpen && (
-        <div
-          className={
-            isMobile
-              ? "fixed inset-0 bg-white z-50"
-              : "fixed inset-0 bg-black/20 flex items-center justify-center z-50"
-          }
-        >
+        {/* 로딩 상태 */}
+        {isLoading ? (
+          <div className="px-6 py-24 text-center text-gray-500">
+            <Loader2 className="w-8 h-8 mx-auto animate-spin text-gray-400" />
+          </div>
+        ) : (
+          <>
+            {/* 빈 상태 */}
+            {products.length === 0 ? (
+              <div className="px-6 py-24 text-center text-gray-500 border border-gray-200 rounded-lg">
+                <p className="mb-4">등록된 상품이 없습니다</p>
+                <Button
+                  onClick={handleAddProduct}
+                  className="h-9 px-4 bg-[#4990FF] hover:bg-[#4990FF]/90 text-white text-sm"
+                >
+                  <Plus className="w-4 h-4 mr-1.5" />
+                  상품 추가
+                </Button>
+              </div>
+            ) : (
+              /* 상품 그리드 */
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={products.map((p) => p.id.toString())}
+                  strategy={rectSortingStrategy}
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {products.map((product) => (
+                      <SortableProductCard
+                        key={product.id}
+                        product={product}
+                        onEdit={handleEditProduct}
+                        onDelete={deleteProduct}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            )}
+          </>
+        )}
+
+        {/* 모달 */}
+        {modalOpen && (
           <div
             className={
               isMobile
-                ? "h-full flex flex-col"
-                : "bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-hidden"
+                ? "fixed inset-0 bg-white z-50"
+                : "fixed inset-0 bg-black/20 flex items-center justify-center z-50"
             }
           >
-            <div className="flex items-center justify-between px-5 py-4 border-b">
-              <h2 className="font-medium">
-                {currentProduct ? "상품 수정" : "상품 추가"}
-              </h2>
-              <button type="button" onClick={handleModalClose} className="p-1">
-                <X size={20} />
-              </button>
-            </div>
             <div
               className={
                 isMobile
-                  ? "flex-1 overflow-auto"
-                  : "max-h-[calc(90vh-60px)] overflow-auto"
+                  ? "h-full flex flex-col"
+                  : "bg-white rounded-lg w-full max-w-lg max-h-[90vh] overflow-hidden"
               }
             >
-              <ProductModal
-                product={currentProduct}
-                onClose={handleModalClose}
-                onSave={handleProductSave}
-                fullScreen={isMobile}
-              />
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+                <h2 className="text-base font-medium text-gray-900">
+                  {currentProduct ? "상품 수정" : "상품 추가"}
+                </h2>
+                <button
+                  type="button"
+                  onClick={handleModalClose}
+                  className="p-1 text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div
+                className={
+                  isMobile
+                    ? "flex-1 overflow-auto [&::-webkit-scrollbar]:hidden"
+                    : "max-h-[calc(90vh-60px)] overflow-auto [&::-webkit-scrollbar]:hidden"
+                }
+              >
+                <ProductModal
+                  product={currentProduct}
+                  onClose={handleModalClose}
+                  onSave={handleProductSave}
+                  fullScreen={isMobile}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

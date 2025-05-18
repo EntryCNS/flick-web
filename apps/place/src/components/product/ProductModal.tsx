@@ -106,7 +106,18 @@ export function ProductModal({
     },
   });
 
+  const stockValue = watch("stock");
+  const statusValue = watch("status");
+
   useEffect(() => {
+    if (stockValue === 0 && statusValue !== "SOLD_OUT") {
+      setValue("status", "SOLD_OUT");
+      toast.info("재고가 0이므로 상품 상태가 품절로 변경되었습니다")
+    } else if (stockValue > 0 && statusValue === "SOLD_OUT") {
+      setValue("status", "AVAILABLE");
+      toast.info("재고가 있으므로 상품 상태가 판매중으로 변경되었습니다")
+    }
+
     if (product) {
       reset({
         name: product.name,
@@ -374,18 +385,15 @@ export function ProductModal({
     <form
       ref={formRef}
       onSubmit={handleSubmit(onSubmitForm)}
-      className={`space-y-6 ${fullScreen ? "p-4" : "p-4"}`}
+      className="p-5 space-y-6"
     >
       <div>
-        <Label
-          htmlFor="image-upload"
-          className="block text-sm font-medium mb-1"
-        >
-          상품 이미지<span className="text-red-500">*</span>
+        <Label className="text-sm font-medium text-gray-900">
+          상품 이미지<span className="text-red-500 ml-0.5">*</span>
         </Label>
 
         {showCamera ? (
-          <div className="relative border-2 border-dashed border-gray-300 rounded-lg h-80 bg-black overflow-hidden">
+          <div className="relative mt-2 border border-gray-200 rounded-lg h-80 bg-black overflow-hidden">
             {cameraError ? (
               <div className="flex flex-col items-center justify-center h-full p-4 text-center bg-white">
                 <div className="text-red-500 mb-2">{cameraError}</div>
@@ -396,8 +404,9 @@ export function ProductModal({
                     setCameraError(null);
                     stopCamera();
                   }}
+                  className="h-9 px-4 text-sm"
                 >
-                  <X size={16} className="mr-1" />
+                  <X className="w-4 h-4 mr-1.5" />
                   닫기
                 </Button>
               </div>
@@ -416,21 +425,21 @@ export function ProductModal({
                   }}
                 />
 
-                <div className="absolute bottom-4 inset-x-0 flex justify-center gap-4">
+                <div className="absolute bottom-4 inset-x-0 flex justify-center gap-3">
                   <Button
                     type="button"
-                    variant="destructive"
+                    variant="outline"
                     onClick={stopCamera}
+                    className="h-9 px-4 text-sm"
                   >
-                    <X size={16} className="mr-1" />
+                    <X className="w-4 h-4 mr-1.5" />
                     취소
                   </Button>
                   <Button
                     type="button"
-                    variant="default"
-                    className="bg-[#4990FF] hover:bg-[#3a7fd6]"
                     onClick={capturePhoto}
                     disabled={!cameraReady}
+                    className="h-9 px-4 text-sm bg-[#4990FF] hover:bg-[#4990FF]/90 text-white"
                   >
                     {cameraReady ? "사진 촬영" : "카메라 준비 중..."}
                   </Button>
@@ -441,7 +450,7 @@ export function ProductModal({
           </div>
         ) : (
           <>
-            <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 h-64 bg-gray-50 relative">
+            <div className="mt-2 flex flex-col items-center justify-center border border-gray-200 rounded-lg p-6 h-64 bg-gray-50 relative">
               {previewImage ? (
                 <>
                   <div
@@ -459,18 +468,18 @@ export function ProductModal({
                     onClick={clearImage}
                     size="icon"
                     variant="outline"
-                    className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full shadow"
+                    className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full border-gray-200 hover:bg-gray-100"
                   >
-                    <X size={16} />
+                    <X className="w-4 h-4" />
                   </Button>
                 </>
               ) : (
                 <div className="flex flex-col items-center">
                   <Upload className="text-gray-400 mb-2" size={32} />
-                  <p className="text-sm text-gray-500 mb-2">
+                  <p className="text-sm text-gray-600 mb-1">
                     이미지를 드래그하거나 클릭하여 업로드하세요
                   </p>
-                  <p className="text-xs text-gray-400 mb-2">
+                  <p className="text-xs text-gray-500">
                     최대 5MB, JPG, PNG, WebP 형식
                   </p>
                 </div>
@@ -487,14 +496,14 @@ export function ProductModal({
             </div>
 
             {!previewImage && (
-              <div className="flex justify-center mt-4">
+              <div className="flex justify-center mt-3">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={startCamera}
-                  className="w-full md:w-auto flex items-center justify-center"
+                  className="h-9 px-4 text-sm border-gray-200 hover:bg-gray-100"
                 >
-                  <Camera size={16} className="mr-2" />
+                  <Camera className="w-4 h-4 mr-1.5" />
                   카메라로 촬영하기
                 </Button>
               </div>
@@ -505,14 +514,13 @@ export function ProductModal({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="name" className="text-sm font-medium">
-            상품 이름<span className="text-red-500">*</span>
+          <Label className="text-sm font-medium text-gray-900">
+            상품 이름<span className="text-red-500 ml-0.5">*</span>
           </Label>
           <Input
-            id="name"
             {...register("name")}
             placeholder="상품 이름을 입력하세요"
-            className="w-full"
+            className="h-9 text-sm border-gray-200 focus:border-[#4990FF] focus:ring-[#4990FF]/20"
           />
           {errors.name && (
             <p className="text-red-500 text-xs">{errors.name.message}</p>
@@ -520,19 +528,18 @@ export function ProductModal({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="price" className="text-sm font-medium">
-            가격 (원)<span className="text-red-500">*</span>
+          <Label className="text-sm font-medium text-gray-900">
+            가격 (원)<span className="text-red-500 ml-0.5">*</span>
           </Label>
           <div className="relative">
             <Input
-              id="price"
               type="text"
               value={watch("price").toLocaleString()}
               onChange={handlePriceChange}
               placeholder="가격을 입력하세요"
-              className="pr-10"
+              className="h-9 text-sm pr-10 border-gray-200 focus:border-[#4990FF] focus:ring-[#4990FF]/20"
             />
-            <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
               원
             </span>
           </div>
@@ -544,15 +551,15 @@ export function ProductModal({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="stock" className="text-sm font-medium">
-            재고 수량<span className="text-red-500">*</span>
+          <Label className="text-sm font-medium text-gray-900">
+            재고 수량<span className="text-red-500 ml-0.5">*</span>
           </Label>
           <Input
-            id="stock"
             type="text"
             value={watch("stock").toString()}
             onChange={handleStockChange}
             placeholder="재고 수량을 입력하세요"
+            className="h-9 text-sm border-gray-200 focus:border-[#4990FF] focus:ring-[#4990FF]/20"
           />
           {errors.stock && (
             <p className="text-red-500 text-xs">{errors.stock.message}</p>
@@ -560,11 +567,11 @@ export function ProductModal({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="status" className="text-sm font-medium">
-            상품 상태<span className="text-red-500">*</span>
+          <Label className="text-sm font-medium text-gray-900">
+            상품 상태<span className="text-red-500 ml-0.5">*</span>
           </Label>
           <Select value={watch("status")} onValueChange={handleStatusChange}>
-            <SelectTrigger>
+            <SelectTrigger className="h-9 text-sm border-gray-200">
               <SelectValue placeholder="상품 상태 선택" />
             </SelectTrigger>
             <SelectContent>
@@ -580,32 +587,36 @@ export function ProductModal({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description" className="text-sm font-medium">
+        <Label className="text-sm font-medium text-gray-900">
           상품 설명
         </Label>
         <Textarea
-          id="description"
           {...register("description")}
           placeholder="상품에 대한 설명을 입력하세요"
-          className="min-h-24 resize-none"
+          className="min-h-24 resize-none text-sm border-gray-200 focus:border-[#4990FF] focus:ring-[#4990FF]/20"
         />
         {errors.description && (
           <p className="text-red-500 text-xs">{errors.description.message}</p>
         )}
       </div>
 
-      <div className="flex gap-3 justify-end">
-        <Button type="button" variant="outline" onClick={onClose}>
+      <div className="flex items-center gap-3 justify-end">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onClose}
+          className="h-9 px-4 text-sm border-gray-200 hover:bg-gray-100"
+        >
           취소
         </Button>
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="bg-[#4990FF] hover:bg-[#3a7fd6]"
+          className="h-9 px-4 text-sm bg-[#4990FF] hover:bg-[#4990FF]/90 text-white"
         >
           {isSubmitting ? (
-            <div className="flex items-center justify-center">
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            <div className="flex items-center">
+              <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
               <span>처리 중...</span>
             </div>
           ) : product ? (

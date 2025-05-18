@@ -126,7 +126,6 @@ export default function OrderDetailModal({
                 <div>
                   <h3 className="font-medium text-gray-700 mb-4">주문 상품</h3>
                   <div className="space-y-3">
-                    
                     {order.items.map((item, index) => (
                       <div
                         key={index}
