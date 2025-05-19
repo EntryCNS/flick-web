@@ -12,13 +12,6 @@ import axios, { AxiosError } from "axios";
 import { useTokenStore } from "@/stores/token";
 import api from "@/lib/api";
 
-const loginSchema = z.object({
-  id: z.string().min(1, "아이디를 입력해주세요"),
-  password: z.string().min(1, "비밀번호를 입력해주세요"),
-});
-
-type LoginFormData = z.infer<typeof loginSchema>;
-
 interface ErrorResponse {
   code: string;
   message: string;
@@ -28,6 +21,13 @@ interface LoginResponse {
   accessToken: string;
   refreshToken: string;
 }
+
+const loginSchema = z.object({
+  id: z.string().min(1, "아이디를 입력해주세요"),
+  password: z.string().min(1, "비밀번호를 입력해주세요"),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();

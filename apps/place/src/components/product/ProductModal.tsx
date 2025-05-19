@@ -76,6 +76,7 @@ export function ProductModal({
   onSave,
   fullScreen = false,
 }: ProductModalProps) {
+  const [initialized, setInitialized] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -106,19 +107,15 @@ export function ProductModal({
     },
   });
 
+  const isFirstRenderRef = useRef(true);
+
   const stockValue = watch("stock");
   const statusValue = watch("status");
 
   useEffect(() => {
-    if (stockValue === 0 && statusValue !== "SOLD_OUT") {
-      setValue("status", "SOLD_OUT");
-      toast.info("재고가 0이므로 상품 상태가 품절로 변경되었습니다");
-    } else if (stockValue > 0 && statusValue === "SOLD_OUT") {
-      setValue("status", "AVAILABLE");
-      toast.info("재고가 있으므로 상품 상태가 판매중으로 변경되었습니다");
-    }
-
     if (product) {
+      setInitialized(false);
+
       reset({
         name: product.name,
         description: product.description || "",
@@ -131,6 +128,10 @@ export function ProductModal({
         setImageUrl(product.imageUrl);
         setPreviewImage(product.imageUrl);
       }
+
+      setTimeout(() => setInitialized(true), 100);
+    } else {
+      setInitialized(true);
     }
 
     if (!fullScreen) {
@@ -143,7 +144,23 @@ export function ProductModal({
         document.removeEventListener("keydown", handleEscape);
       };
     }
-  }, [product, onClose, reset, fullScreen, stockValue, statusValue, setValue]);
+  }, [product, onClose, reset, fullScreen]);
+
+  useEffect(() => {
+    if (!initialized) return;
+
+    if (!isFirstRenderRef.current) {
+      if (stockValue === 0 && statusValue !== "SOLD_OUT") {
+        setValue("status", "SOLD_OUT");
+        toast.info("재고가 0이므로 상품 상태가 품절로 변경되었습니다");
+      } else if (stockValue > 0 && statusValue === "SOLD_OUT") {
+        setValue("status", "AVAILABLE");
+        toast.info("재고가 있으므로 상품 상태가 판매중으로 변경되었습니다");
+      }
+    } else {
+      isFirstRenderRef.current = false;
+    }
+  }, [stockValue, statusValue, setValue, initialized])
 
   const startCamera = async () => {
     setCameraError(null);
@@ -489,9 +506,8 @@ export function ProductModal({
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
-                className={`absolute inset-0 w-full h-full opacity-0 cursor-pointer ${
-                  previewImage ? "pointer-events-none" : ""
-                }`}
+                className={`absolute inset-0 w-full h-full opacity-0 cursor-pointer ${previewImage ? "pointer-events-none" : ""
+                  }`}
               />
             </div>
 
