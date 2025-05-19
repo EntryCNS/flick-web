@@ -12,18 +12,18 @@ import { ko } from "date-fns/locale";
 interface TransactionType {
   id: number;
   user: {
-    id: number
+    id: number;
     name: string;
-  }
+  };
   type: "CHARGE" | "PAYMENT";
   amount: number;
   balanceAfter: number;
   booth: {
     name: string;
-  },
+  };
   product: {
     name: string;
-  },
+  };
   memo: string;
   createdAt: string[];
 }
@@ -43,13 +43,13 @@ const formatDateTime = (dateArr: string[]) => {
   const [year, month, day, hour, minute, second] = dateArr;
   const date = new Date(+year, +month - 1, +day, +hour, +minute, +second);
   return {
-    date: format(date, 'MM.dd', { locale: ko }),
-    time: format(date, 'HH:mm', { locale: ko })
+    date: format(date, "MM.dd", { locale: ko }),
+    time: format(date, "HH:mm", { locale: ko }),
   };
 };
 
 const formatCurrency = (amount: number) => {
-  return amount.toLocaleString('ko-KR') + '원';
+  return amount.toLocaleString("ko-KR") + "원";
 };
 
 export default function TransactionsPage() {
@@ -58,13 +58,13 @@ export default function TransactionsPage() {
   const itemsPerPage = 15;
 
   const { data, isLoading } = useQuery<PaginatedResponse>({
-    queryKey: ['transactions', currentPage],
+    queryKey: ["transactions", currentPage],
     queryFn: async () => {
       const { data } = await api.get<PaginatedResponse>(`/transactions`, {
         params: {
           page: currentPage,
           size: itemsPerPage,
-        }
+        },
       });
       return data;
     },
@@ -77,16 +77,16 @@ export default function TransactionsPage() {
   const getPageNumbers = () => {
     const maxPages = 5;
     const halfMax = Math.floor(maxPages / 2);
-    
+
     let startPage = Math.max(0, currentPage - halfMax);
-    let endPage = Math.min(totalPages - 1, startPage + maxPages - 1);
-    
+    const endPage = Math.min(totalPages - 1, startPage + maxPages - 1);
+
     if (endPage - startPage + 1 < maxPages) {
       startPage = Math.max(0, endPage - maxPages + 1);
     }
-    
+
     return Array.from(
-      { length: Math.min(maxPages, totalPages) }, 
+      { length: Math.min(maxPages, totalPages) },
       (_, i) => startPage + i
     );
   };
@@ -108,11 +108,21 @@ export default function TransactionsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">번호</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">유형</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">사용자</th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-500">금액/잔액</th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-500">일시</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
+                    번호
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
+                    유형
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
+                    사용자
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-500">
+                    금액/잔액
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-500">
+                    일시
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -124,7 +134,10 @@ export default function TransactionsPage() {
                   </tr>
                 ) : transactions.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-24 text-center text-gray-500">
+                    <td
+                      colSpan={5}
+                      className="px-6 py-24 text-center text-gray-500"
+                    >
                       거래 내역이 없습니다
                     </td>
                   </tr>
@@ -136,7 +149,9 @@ export default function TransactionsPage() {
                     return (
                       <tr
                         key={transaction.id}
-                        onClick={() => router.push(`/transactions/${transaction.id}`)}
+                        onClick={() =>
+                          router.push(`/transactions/${transaction.id}`)
+                        }
                         className="hover:bg-gray-50 cursor-pointer transition-colors group"
                       >
                         <td className="px-6 py-4">
@@ -145,11 +160,19 @@ export default function TransactionsPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className={cn(
-                            "inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium",
-                            isCharge ? "bg-blue-50 text-blue-600" : "bg-red-50 text-red-600"
-                          )}>
-                            {isCharge ? <ArrowDownRight size={14} /> : <ArrowUpRight size={14} />}
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium",
+                              isCharge
+                                ? "bg-blue-50 text-blue-600"
+                                : "bg-red-50 text-red-600"
+                            )}
+                          >
+                            {isCharge ? (
+                              <ArrowDownRight size={14} />
+                            ) : (
+                              <ArrowUpRight size={14} />
+                            )}
                             {isCharge ? "충전" : "결제"}
                           </span>
                         </td>
@@ -160,11 +183,14 @@ export default function TransactionsPage() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div>
-                            <span className={cn(
-                              "text-sm font-medium",
-                              isCharge ? "text-blue-600" : "text-red-600"
-                            )}>
-                              {isCharge ? "+" : "-"}{formatCurrency(transaction.amount)}
+                            <span
+                              className={cn(
+                                "text-sm font-medium",
+                                isCharge ? "text-blue-600" : "text-red-600"
+                              )}
+                            >
+                              {isCharge ? "+" : "-"}
+                              {formatCurrency(transaction.amount)}
                             </span>
                             <div className="text-xs text-gray-500 mt-0.5">
                               {formatCurrency(transaction.balanceAfter)}
@@ -173,8 +199,12 @@ export default function TransactionsPage() {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex flex-col items-end">
-                            <span className="text-sm text-gray-900">{datetime.date}</span>
-                            <span className="text-xs text-gray-500 mt-0.5">{datetime.time}</span>
+                            <span className="text-sm text-gray-900">
+                              {datetime.date}
+                            </span>
+                            <span className="text-xs text-gray-500 mt-0.5">
+                              {datetime.time}
+                            </span>
                           </div>
                         </td>
                       </tr>
@@ -189,14 +219,14 @@ export default function TransactionsPage() {
         {totalPages > 1 && (
           <div className="mt-8 flex items-center justify-center gap-1">
             <button
-              onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+              onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
               disabled={currentPage === 0}
               className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-40 hover:bg-gray-100 rounded-full transition-colors"
             >
               &lt;
             </button>
-            
-            {getPageNumbers().map(pageNum => (
+
+            {getPageNumbers().map((pageNum) => (
               <button
                 key={pageNum}
                 onClick={() => setCurrentPage(pageNum)}
@@ -212,7 +242,9 @@ export default function TransactionsPage() {
             ))}
 
             <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+              onClick={() =>
+                setCurrentPage((p) => Math.min(totalPages - 1, p + 1))
+              }
               disabled={currentPage === totalPages - 1}
               className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-40 hover:bg-gray-100 rounded-full transition-colors"
             >

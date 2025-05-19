@@ -1,12 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Filter, X, ChevronDown, User, CheckCircle, Loader2 } from 'lucide-react';
+import {
+  Search,
+  Filter,
+  X,
+  ChevronDown,
+  User,
+  CheckCircle,
+  Loader2,
+} from "lucide-react";
 import { AmountModal } from "@/components/users/AmountModal";
 import api from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import { useTokenStore } from "@/stores/token";
 
 type UserRole = "STUDENT" | "TEACHER" | "ADMIN";
 
@@ -42,7 +49,7 @@ interface FilterGroupType {
 const ITEMS_PER_PAGE = 15; // 페이지당 아이템 수 증가
 
 export default function UsersPage() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<FilterType[]>([]);
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
@@ -50,9 +57,11 @@ export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const { data, isLoading } = useQuery<PaginatedResponse>({
-    queryKey: ['users', currentPage],
+    queryKey: ["users", currentPage],
     queryFn: async () => {
-      const { data } = await api.get<PaginatedResponse>(`/users?page=${currentPage - 1}&size=${ITEMS_PER_PAGE}`);
+      const { data } = await api.get<PaginatedResponse>(
+        `/users?page=${currentPage - 1}&size=${ITEMS_PER_PAGE}`
+      );
       return data;
     },
   });
@@ -62,15 +71,17 @@ export default function UsersPage() {
   const totalElements = data?.totalElements || 0;
 
   const filterOptions: FilterGroupType[] = [
-    { category: '역할', options: ['STUDENT', 'TEACHER'] },
-    { category: '학년', options: ['1학년', '2학년', '3학년'] },
-    { category: '반', options: ['1반', '2반', '3반', '4반'] },
+    { category: "역할", options: ["STUDENT", "TEACHER"] },
+    { category: "학년", options: ["1학년", "2학년", "3학년"] },
+    { category: "반", options: ["1반", "2반", "3반", "4반"] },
   ];
 
   const handleFilterAdd = (category: string, value: string) => {
-    setActiveFilters(prev => {
+    setActiveFilters((prev) => {
       // 이미 해당 카테고리가 있는지 확인
-      const existingFilterIndex = prev.findIndex(filter => filter.category === category);
+      const existingFilterIndex = prev.findIndex(
+        (filter) => filter.category === category
+      );
 
       if (existingFilterIndex >= 0) {
         // 이미 해당 카테고리가 있으면 값만 추가
@@ -90,28 +101,33 @@ export default function UsersPage() {
   };
 
   const handleFilterRemove = (category: string, value: string) => {
-    setActiveFilters(prev => {
-      const newFilters = prev.map(filter => {
+    setActiveFilters((prev) => {
+      const newFilters = prev.map((filter) => {
         if (filter.category === category) {
           // 해당 값만 제거
-          const newValues = filter.value.filter(v => v !== value);
+          const newValues = filter.value.filter((v) => v !== value);
           return { ...filter, value: newValues };
         }
         return filter;
       });
 
       // 값이 없는 필터는 제거
-      return newFilters.filter(filter => filter.value.length > 0);
+      return newFilters.filter((filter) => filter.value.length > 0);
     });
     setCurrentPage(1);
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilters = activeFilters.every(filter => {
-      if (filter.category === '역할') return filter.value.some(role => user.role.includes(role));
-      if (filter.category === '학년') return filter.value.some(grade => user.grade === parseInt(grade));
-      if (filter.category === '반') return filter.value.some(room => user.room === parseInt(room));
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch = user.name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesFilters = activeFilters.every((filter) => {
+      if (filter.category === "역할")
+        return filter.value.some((role) => user.role.includes(role));
+      if (filter.category === "학년")
+        return filter.value.some((grade) => user.grade === parseInt(grade));
+      if (filter.category === "반")
+        return filter.value.some((room) => user.room === parseInt(room));
       return true;
     });
     return matchesSearch && matchesFilters;
@@ -140,7 +156,10 @@ export default function UsersPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                size={16}
+              />
             </div>
 
             <div className="relative">
@@ -151,21 +170,30 @@ export default function UsersPage() {
               >
                 <Filter size={16} className="text-gray-500" />
                 필터
-                <ChevronDown size={14} className={cn(
-                  "text-gray-400 transition-transform",
-                  isFilterMenuOpen && "rotate-180"
-                )} />
+                <ChevronDown
+                  size={14}
+                  className={cn(
+                    "text-gray-400 transition-transform",
+                    isFilterMenuOpen && "rotate-180"
+                  )}
+                />
               </button>
 
               {isFilterMenuOpen && (
-                <div className="absolute mt-1 right-0 z-10 w-64 bg-white rounded-lg shadow-lg 
-                              border border-gray-200 py-2">
+                <div
+                  className="absolute mt-1 right-0 z-10 w-64 bg-white rounded-lg shadow-lg 
+                              border border-gray-200 py-2"
+                >
                   {filterOptions.map((group, i) => (
                     <div key={i} className="py-1">
-                      <div className="px-3 py-1.5 text-xs font-medium text-gray-500">{group.category}</div>
+                      <div className="px-3 py-1.5 text-xs font-medium text-gray-500">
+                        {group.category}
+                      </div>
                       {group.options.map((opt, j) => {
                         const isSelected = activeFilters.some(
-                          f => f.category === group.category && f.value.includes(opt)
+                          (f) =>
+                            f.category === group.category &&
+                            f.value.includes(opt)
                         );
                         return (
                           <button
@@ -174,11 +202,16 @@ export default function UsersPage() {
                               "w-full px-3 py-2 text-sm text-left hover:bg-gray-50 transition-colors",
                               isSelected && "text-[#4990FF] font-medium"
                             )}
-                            onClick={() => !isSelected && handleFilterAdd(group.category, opt)}
+                            onClick={() =>
+                              !isSelected &&
+                              handleFilterAdd(group.category, opt)
+                            }
                             disabled={isSelected}
                           >
                             {opt}
-                            {isSelected && <CheckCircle className="float-right" size={14} />}
+                            {isSelected && (
+                              <CheckCircle className="float-right" size={14} />
+                            )}
                           </button>
                         );
                       })}
@@ -191,13 +224,15 @@ export default function UsersPage() {
 
           {activeFilters.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {activeFilters.map((filter) => (
-                filter.value.map((val, i) => (
+              {activeFilters.map((filter) =>
+                filter.value.map((val) => (
                   <div
                     key={`${filter.category}-${val}`}
                     className="flex items-center gap-2 px-2 py-1 bg-[#4990FF]/10 rounded text-sm"
                   >
-                    <span className="text-[#4990FF] font-medium">{filter.category}:</span>
+                    <span className="text-[#4990FF] font-medium">
+                      {filter.category}:
+                    </span>
                     <span className="text-gray-700">{val}</span>
                     <button
                       onClick={() => handleFilterRemove(filter.category, val)}
@@ -207,7 +242,7 @@ export default function UsersPage() {
                     </button>
                   </div>
                 ))
-              ))}
+              )}
             </div>
           )}
 
@@ -216,10 +251,18 @@ export default function UsersPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">이름</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">역할</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">학번</th>
-                    <th className="px-6 py-4 text-right text-xs font-medium text-gray-500">잔액</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
+                      이름
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
+                      역할
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
+                      학번
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-medium text-gray-500">
+                      잔액
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -230,7 +273,7 @@ export default function UsersPage() {
                       </td>
                     </tr>
                   ) : filteredUsers.length > 0 ? (
-                    filteredUsers.map(user => (
+                    filteredUsers.map((user) => (
                       <tr
                         key={user.id}
                         className="hover:bg-gray-50 cursor-pointer transition-colors group"
@@ -245,12 +288,14 @@ export default function UsersPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <span className={cn(
-                            "inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium",
-                            user.role === 'STUDENT'
-                              ? "bg-[#4990FF]/10 text-[#4990FF]"
-                              : "bg-emerald-50 text-emerald-600"
-                          )}>
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium",
+                              user.role === "STUDENT"
+                                ? "bg-[#4990FF]/10 text-[#4990FF]"
+                                : "bg-emerald-50 text-emerald-600"
+                            )}
+                          >
                             <User size={14} />
                             {user.role}
                           </span>
@@ -258,8 +303,8 @@ export default function UsersPage() {
                         <td className="px-6 py-4">
                           <span className="text-sm text-gray-600">
                             {user.grade && user.room && user.number
-                              ? `${user.grade}${user.room}${user.number.toString().padStart(2, '0')}`
-                              : '-'}
+                              ? `${user.grade}${user.room}${user.number.toString().padStart(2, "0")}`
+                              : "-"}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right">
@@ -271,7 +316,10 @@ export default function UsersPage() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={4} className="px-6 py-24 text-center text-gray-500">
+                      <td
+                        colSpan={4}
+                        className="px-6 py-24 text-center text-gray-500"
+                      >
                         검색 결과가 없습니다
                       </td>
                     </tr>
@@ -284,30 +332,34 @@ export default function UsersPage() {
               <div className="px-6 py-4 border-t border-gray-200">
                 <div className="flex items-center justify-center gap-1">
                   <button
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                     className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-40 hover:bg-gray-100 rounded-full transition-colors"
                   >
                     &lt;
                   </button>
 
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={cn(
-                        "w-8 h-8 text-sm rounded-full transition-colors",
-                        currentPage === page
-                          ? "bg-[#4990FF] text-white"
-                          : "text-gray-600 hover:bg-gray-100"
-                      )}
-                    >
-                      {page}
-                    </button>
-                  ))}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={cn(
+                          "w-8 h-8 text-sm rounded-full transition-colors",
+                          currentPage === page
+                            ? "bg-[#4990FF] text-white"
+                            : "text-gray-600 hover:bg-gray-100"
+                        )}
+                      >
+                        {page}
+                      </button>
+                    )
+                  )}
 
                   <button
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    onClick={() =>
+                      setCurrentPage((p) => Math.min(totalPages, p + 1))
+                    }
                     disabled={currentPage === totalPages}
                     className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-40 hover:bg-gray-100 rounded-full transition-colors"
                   >
@@ -322,10 +374,13 @@ export default function UsersPage() {
 
       {modalOpen && selectedUser && (
         <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
-          <AmountModal user={selectedUser} onClose={() => {
-            setModalOpen(false);
-            setSelectedUser(null);
-          }} />
+          <AmountModal
+            user={selectedUser}
+            onClose={() => {
+              setModalOpen(false);
+              setSelectedUser(null);
+            }}
+          />
         </div>
       )}
     </div>

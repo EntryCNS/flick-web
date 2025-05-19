@@ -11,14 +11,13 @@ import {
   Legend,
   ChartOptions,
   TooltipItem,
-  Scale,
   LineElement,
   PointElement,
   TimeScale,
 } from "chart.js";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { API_URL } from "@/constants/api";
-import 'chartjs-adapter-date-fns';
+import "chartjs-adapter-date-fns";
 
 interface BoothData {
   rank: number;
@@ -33,13 +32,18 @@ interface WebSocketMessage {
   timeStamp: string;
 }
 
-type ChartType = 'bar' | 'line';
+interface TimeSeriesDataPoint {
+  x: Date;
+  y: number;
+}
+
+type ChartType = "bar" | "line";
 
 const WEBSOCKET_RECONNECT_DELAY = 3000;
 const MAX_RECONNECT_ATTEMPTS = 5;
 const PING_INTERVAL = 30000;
 const ANIMATION_DURATION = 500;
-const ANIMATION_EASING = 'easeInOutQuart';
+const ANIMATION_EASING = "easeInOutQuart";
 
 const generateColorForBooth = (boothId: number) => {
   const hue = (boothId * 137.508) % 360;
@@ -49,76 +53,100 @@ const generateColorForBooth = (boothId: number) => {
   };
 };
 
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  TimeScale,
+  Title,
+  Tooltip,
+  Legend
+);
+
 export default function BoothRankingPage() {
   const [boothRankingData, setBoothRankingData] = useState<BoothData[]>([]);
-  const [timeSeriesData, setTimeSeriesData] = useState<Map<number, { time: string; sales: number }[]>>(new Map());
-  const [chartType, setChartType] = useState<ChartType>('bar');
+  const [timeSeriesData, setTimeSeriesData] = useState<
+    Map<number, { time: string; sales: number }[]>
+  >(new Map());
+  const [chartType] = useState<ChartType>("bar");
   const wsRef = useRef<WebSocket | null>(null);
-  const chartRef = useRef<ChartJS<"bar" | "line"> | null>(null);
+  const barChartRef = useRef<ChartJS<"bar", number[], unknown> | null>(null);
+  const lineChartRef = useRef<ChartJS<
+    "line",
+    TimeSeriesDataPoint[],
+    unknown
+  > | null>(null);
   const reconnectAttempts = useRef(0);
   const pingIntervalId = useRef<NodeJS.Timeout | null>(null);
 
-  ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    LineElement,
-    PointElement,
-    TimeScale,
-    Title,
-    Tooltip,
-    Legend
-  );
-
-  const loadInitialData = async () => {
-    try {
-      const { data } = await api.get<BoothData[]>("/booths/rankings");
-      setBoothRankingData(data.sort((a, b) => b.totalSales - a.totalSales));
-    } catch (error) {
-      console.error("[Booth Ranking] Failed to load initial data:", error);
+  const cleanupWebSocket = useCallback(() => {
+    if (pingIntervalId.current) {
+      clearInterval(pingIntervalId.current);
+      pingIntervalId.current = null;
     }
-  };
-
-  const updateBoothData = useCallback((updatedData: WebSocketMessage | WebSocketMessage[]) => {
-    if (Array.isArray(updatedData)) {
-      setBoothRankingData(prev => {
-        const updated = prev.map(booth => {
-          const latestUpdate = updatedData.find(update => update.id === booth.id);
-          return latestUpdate 
-            ? { ...booth, totalSales: latestUpdate.totalSales }
-            : booth;
-        }).sort((a, b) => b.totalSales - a.totalSales);
-        return updated;
-      });
-
-      updatedData.forEach(message => {
-        setTimeSeriesData(prev => {
-          const newMap = new Map(prev);
-          const boothData = newMap.get(message.id) || [];
-          boothData.push({ time: message.timeStamp, sales: message.totalSales });
-          newMap.set(message.id, boothData);
-          return newMap;
-        });
-      });
-    } else {
-      setBoothRankingData(prev => {
-        const updated = prev.map(booth => 
-          booth.id === updatedData.id 
-            ? { ...booth, totalSales: updatedData.totalSales }
-            : booth
-        ).sort((a, b) => b.totalSales - a.totalSales);
-        return updated;
-      });
-
-      setTimeSeriesData(prev => {
-        const newMap = new Map(prev);
-        const boothData = newMap.get(updatedData.id) || [];
-        boothData.push({ time: updatedData.timeStamp, sales: updatedData.totalSales });
-        newMap.set(updatedData.id, boothData);
-        return newMap;
-      });
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
     }
   }, []);
+
+  const updateBoothData = useCallback(
+    (updatedData: WebSocketMessage | WebSocketMessage[]) => {
+      if (Array.isArray(updatedData)) {
+        setBoothRankingData((prev) => {
+          const updated = prev
+            .map((booth) => {
+              const latestUpdate = updatedData.find(
+                (update) => update.id === booth.id
+              );
+              return latestUpdate
+                ? { ...booth, totalSales: latestUpdate.totalSales }
+                : booth;
+            })
+            .sort((a, b) => b.totalSales - a.totalSales);
+          return updated;
+        });
+
+        updatedData.forEach((message) => {
+          setTimeSeriesData((prev) => {
+            const newMap = new Map(prev);
+            const boothData = newMap.get(message.id) || [];
+            boothData.push({
+              time: message.timeStamp,
+              sales: message.totalSales,
+            });
+            newMap.set(message.id, boothData);
+            return newMap;
+          });
+        });
+      } else {
+        setBoothRankingData((prev) => {
+          const updated = prev
+            .map((booth) =>
+              booth.id === updatedData.id
+                ? { ...booth, totalSales: updatedData.totalSales }
+                : booth
+            )
+            .sort((a, b) => b.totalSales - a.totalSales);
+          return updated;
+        });
+
+        setTimeSeriesData((prev) => {
+          const newMap = new Map(prev);
+          const boothData = newMap.get(updatedData.id) || [];
+          boothData.push({
+            time: updatedData.timeStamp,
+            sales: updatedData.totalSales,
+          });
+          newMap.set(updatedData.id, boothData);
+          return newMap;
+        });
+      }
+    },
+    []
+  );
 
   const setupWebSocket = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -126,7 +154,9 @@ export default function BoothRankingPage() {
     }
 
     try {
-      wsRef.current = new WebSocket(`${API_URL.replace('http', 'ws')}/ws/booth-ranking`);
+      wsRef.current = new WebSocket(
+        `${API_URL.replace("http", "ws")}/ws/booth-ranking`
+      );
 
       wsRef.current.onopen = () => {
         reconnectAttempts.current = 0;
@@ -143,11 +173,14 @@ export default function BoothRankingPage() {
           if (message.type === "pong") return;
           updateBoothData(message);
         } catch (error) {
-          console.error("[Booth Ranking] Failed to process WebSocket message:", error);
+          console.error(
+            "[Booth Ranking] Failed to process WebSocket message:",
+            error
+          );
         }
       };
 
-      wsRef.current.onclose = (event) => {
+      wsRef.current.onclose = () => {
         cleanupWebSocket();
         if (reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
           reconnectAttempts.current++;
@@ -157,18 +190,16 @@ export default function BoothRankingPage() {
     } catch (error) {
       console.error("[Booth Ranking] Failed to setup WebSocket:", error);
     }
-  }, [updateBoothData]);
+  }, [updateBoothData, cleanupWebSocket]);
 
-  const cleanupWebSocket = useCallback(() => {
-    if (pingIntervalId.current) {
-      clearInterval(pingIntervalId.current);
-      pingIntervalId.current = null;
+  const loadInitialData = async () => {
+    try {
+      const { data } = await api.get<BoothData[]>("/booths/rankings");
+      setBoothRankingData(data.sort((a, b) => b.totalSales - a.totalSales));
+    } catch (error) {
+      console.error("[Booth Ranking] Failed to load initial data:", error);
     }
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
-  }, []);
+  };
 
   useEffect(() => {
     loadInitialData();
@@ -178,17 +209,17 @@ export default function BoothRankingPage() {
     };
   }, [setupWebSocket, cleanupWebSocket]);
 
-  const barOptions: ChartOptions<'bar'> = {
+  const barOptions: ChartOptions<"bar"> = {
     responsive: true,
     maintainAspectRatio: false,
-    indexAxis: 'y',
+    indexAxis: "y",
     animation: {
       duration: ANIMATION_DURATION,
       easing: ANIMATION_EASING,
     },
     interaction: {
-      mode: 'nearest',
-      axis: 'y',
+      mode: "nearest",
+      axis: "y",
       intersect: false,
     },
     plugins: {
@@ -197,14 +228,14 @@ export default function BoothRankingPage() {
       },
       tooltip: {
         enabled: true,
-        position: 'nearest',
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: 'white',
-        bodyColor: 'white',
+        position: "nearest",
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        titleColor: "white",
+        bodyColor: "white",
         padding: 12,
         displayColors: false,
         callbacks: {
-          label(tooltipItem: TooltipItem<'bar'>) {
+          label(tooltipItem: TooltipItem<"bar">) {
             return `판매금액: ${new Intl.NumberFormat("ko-KR").format(Number(tooltipItem.raw))}원`;
           },
         },
@@ -212,32 +243,34 @@ export default function BoothRankingPage() {
     },
     scales: {
       x: {
-        type: 'linear',
+        type: "linear",
         grid: { display: true },
-        title: { 
-          display: true, 
+        title: {
+          display: true,
           text: "판매금액 (원)",
-          font: { size: 14, weight: 'bold' }
+          font: { size: 14, weight: "bold" },
         },
         ticks: {
           callback(tickValue: number | string) {
-            return new Intl.NumberFormat("ko-KR").format(Number(tickValue)) + "원";
+            return (
+              new Intl.NumberFormat("ko-KR").format(Number(tickValue)) + "원"
+            );
           },
         },
       },
       y: {
-        type: 'category',
+        type: "category",
         grid: { display: false },
-        title: { 
-          display: true, 
+        title: {
+          display: true,
           text: "부스",
-          font: { size: 14, weight: 'bold' }
+          font: { size: 14, weight: "bold" },
         },
       },
     },
   };
 
-  const lineOptions: ChartOptions<'line'> = {
+  const lineOptions: ChartOptions<"line"> = {
     responsive: true,
     maintainAspectRatio: false,
     animation: {
@@ -245,21 +278,21 @@ export default function BoothRankingPage() {
       easing: ANIMATION_EASING,
     },
     interaction: {
-      mode: 'nearest',
+      mode: "nearest",
       intersect: false,
     },
     plugins: {
       legend: {
-        position: 'top' as const,
+        position: "top" as const,
       },
       tooltip: {
         enabled: true,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: 'white',
-        bodyColor: 'white',
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        titleColor: "white",
+        bodyColor: "white",
         padding: 12,
         callbacks: {
-          label(tooltipItem: TooltipItem<'line'>) {
+          label(tooltipItem: TooltipItem<"line">) {
             return `판매금액: ${new Intl.NumberFormat("ko-KR").format(Number(tooltipItem.raw))}원`;
           },
         },
@@ -267,30 +300,32 @@ export default function BoothRankingPage() {
     },
     scales: {
       x: {
-        type: 'time',
+        type: "time",
         time: {
-          unit: 'minute',
+          unit: "minute",
           displayFormats: {
-            minute: 'HH:mm'
-          }
+            minute: "HH:mm",
+          },
         },
-        title: { 
-          display: true, 
+        title: {
+          display: true,
           text: "시간",
-          font: { size: 14, weight: 'bold' }
+          font: { size: 14, weight: "bold" },
         },
       },
       y: {
-        type: 'linear',
+        type: "linear",
         grid: { display: true },
-        title: { 
-          display: true, 
+        title: {
+          display: true,
           text: "판매금액 (원)",
-          font: { size: 14, weight: 'bold' }
+          font: { size: 14, weight: "bold" },
         },
         ticks: {
           callback(tickValue: number | string) {
-            return new Intl.NumberFormat("ko-KR").format(Number(tickValue)) + "원";
+            return (
+              new Intl.NumberFormat("ko-KR").format(Number(tickValue)) + "원"
+            );
           },
         },
       },
@@ -298,29 +333,31 @@ export default function BoothRankingPage() {
   };
 
   const barData = {
-    labels: boothRankingData.map(booth => booth.name),
-    datasets: [{
-      data: boothRankingData.map(booth => booth.totalSales),
-      backgroundColor: boothRankingData.map(booth => 
-        generateColorForBooth(booth.id).backgroundColor
-      ),
-      borderColor: boothRankingData.map(booth => 
-        generateColorForBooth(booth.id).borderColor
-      ),
-      borderWidth: 1,
-      borderRadius: 4,
-      barThickness: 24,
-      minBarLength: 10,
-    }],
+    labels: boothRankingData.map((booth) => booth.name),
+    datasets: [
+      {
+        data: boothRankingData.map((booth) => booth.totalSales),
+        backgroundColor: boothRankingData.map(
+          (booth) => generateColorForBooth(booth.id).backgroundColor
+        ),
+        borderColor: boothRankingData.map(
+          (booth) => generateColorForBooth(booth.id).borderColor
+        ),
+        borderWidth: 1,
+        borderRadius: 4,
+        barThickness: 24,
+        minBarLength: 10,
+      },
+    ],
   };
 
   const lineData = {
-    datasets: boothRankingData.map(booth => ({
+    datasets: boothRankingData.map((booth) => ({
       label: booth.name,
-      data: (timeSeriesData.get(booth.id) || []).map(point => ({
+      data: (timeSeriesData.get(booth.id) || []).map((point) => ({
         x: new Date(point.time),
-        y: point.sales
-      })),
+        y: point.sales,
+      })) as TimeSeriesDataPoint[],
       borderColor: generateColorForBooth(booth.id).borderColor,
       backgroundColor: generateColorForBooth(booth.id).backgroundColor,
       tension: 0.4,
@@ -340,47 +377,17 @@ export default function BoothRankingPage() {
               </span>
             </div>
           </div>
-          
-          {/* 차트 타입 선택 버튼 (주석 처리된 부분) */}
-          {/* <div className="flex gap-2">
-            <button
-              onClick={() => setChartType('bar')}
-              className={cn(
-                "h-9 px-4 rounded-lg text-sm font-medium transition-colors",
-                chartType === 'bar'
-                  ? "bg-[#4990FF] text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              )}
-            >
-              막대 그래프
-            </button>
-            <button
-              onClick={() => setChartType('line')}
-              className={cn(
-                "h-9 px-4 rounded-lg text-sm font-medium transition-colors",
-                chartType === 'line'
-                  ? "bg-[#4990FF] text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              )}
-            >
-              시계열 그래프
-            </button>
-          </div> */}
         </div>
 
         <div className="rounded-lg border border-gray-200 overflow-hidden">
           {boothRankingData.length > 0 ? (
             <div className="p-6">
-              <div style={{ height: '600px' }}>
-                {chartType === 'bar' ? (
-                  <Bar
-                    ref={chartRef as any}
-                    options={barOptions} 
-                    data={barData}
-                  />
+              <div style={{ height: "600px" }}>
+                {chartType === "bar" ? (
+                  <Bar ref={barChartRef} options={barOptions} data={barData} />
                 ) : (
                   <Line
-                    ref={chartRef as any}
+                    ref={lineChartRef}
                     options={lineOptions}
                     data={lineData}
                   />

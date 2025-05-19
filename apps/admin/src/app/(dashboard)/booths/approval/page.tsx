@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { CheckCircle, XCircle, Store } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 
@@ -26,14 +24,14 @@ const formatDateTime = (datetime: LocalDateTime) => {
     const [year, month, day, hour, minute] = datetime;
     const date = new Date(+year, +month - 1, +day, +hour, +minute);
     return {
-      date: format(date, 'MM.dd', { locale: ko }),
-      time: format(date, 'HH:mm', { locale: ko })
+      date: format(date, "MM.dd", { locale: ko }),
+      time: format(date, "HH:mm", { locale: ko }),
     };
   }
   const date = new Date(datetime);
   return {
-    date: format(date, 'MM.dd', { locale: ko }),
-    time: format(date, 'HH:mm', { locale: ko })
+    date: format(date, "MM.dd", { locale: ko }),
+    time: format(date, "HH:mm", { locale: ko }),
   };
 };
 
@@ -44,8 +42,10 @@ export default function BoothApprovalPage() {
     queryKey: ["pendingBooths"],
     queryFn: async () => {
       const response = await api.get("/booths");
-      return response.data.filter((booth: BoothType) => booth.status === "PENDING");
-    }
+      return response.data.filter(
+        (booth: BoothType) => booth.status === "PENDING"
+      );
+    },
   });
 
   const approveMutation = useMutation({
@@ -53,7 +53,7 @@ export default function BoothApprovalPage() {
     onSuccess: () => {
       toast.success("부스가 승인되었습니다");
       queryClient.invalidateQueries({ queryKey: ["pendingBooths"] });
-    }
+    },
   });
 
   const rejectMutation = useMutation({
@@ -61,7 +61,7 @@ export default function BoothApprovalPage() {
     onSuccess: () => {
       toast.success("부스가 거부되었습니다");
       queryClient.invalidateQueries({ queryKey: ["pendingBooths"] });
-    }
+    },
   });
 
   return (
@@ -102,7 +102,9 @@ export default function BoothApprovalPage() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm text-gray-500">#{booth.id}</span>
+                          <span className="text-sm text-gray-500">
+                            #{booth.id}
+                          </span>
                           <h2 className="text-base font-medium text-gray-900 truncate">
                             {booth.name}
                           </h2>
@@ -113,7 +115,9 @@ export default function BoothApprovalPage() {
                       </div>
                       <div className="flex flex-col items-end text-sm">
                         <time className="text-gray-900">{datetime.date}</time>
-                        <time className="text-xs text-gray-500 mt-0.5">{datetime.time}</time>
+                        <time className="text-xs text-gray-500 mt-0.5">
+                          {datetime.time}
+                        </time>
                       </div>
                     </div>
 

@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 import { User, School, Loader2 } from "lucide-react";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -27,12 +24,6 @@ interface AmountModalProps {
   onClose: () => void;
 }
 
-const amountSchema = z.object({
-  amount: z.number().min(1, "충전 금액은 1원 이상이어야 합니다"),
-});
-
-type AmountFormData = z.infer<typeof amountSchema>;
-
 const AMOUNT_PRESETS = [1000, 3000, 5000, 10000, 30000, 50000] as const;
 
 export function AmountModal({ user, onClose }: AmountModalProps) {
@@ -44,7 +35,9 @@ export function AmountModal({ user, onClose }: AmountModalProps) {
       return await api.post(`/users/${user.id}/charge`, { amount });
     },
     onSuccess: () => {
-      toast.success(`${user.name}님에게 ${amount.toLocaleString()}원이 충전되었습니다`);
+      toast.success(
+        `${user.name}님에게 ${amount.toLocaleString()}원이 충전되었습니다`
+      );
       queryClient.invalidateQueries({ queryKey: ["users"] });
       onClose();
     },
@@ -83,18 +76,29 @@ export function AmountModal({ user, onClose }: AmountModalProps) {
           <div>
             <h3 className="text-lg font-medium text-gray-900">{user.name}</h3>
             <div className="flex items-center gap-2 text-sm text-gray-600">
-              {user.role === "STUDENT" && user.grade && user.room && user.number && (
-                <span>{`${user.grade}학년 ${user.room}반 ${user.number}번`}</span>
-              )}
-              <span className={cn(
-                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
-                user.role === "STUDENT" ? "bg-[#4990FF]/10 text-[#4990FF]" :
-                  user.role === "TEACHER" ? "bg-emerald-50 text-emerald-600" :
-                    "bg-purple-50 text-purple-600"
-              )}>
-                {user.role === "STUDENT" ? <User className="h-3 w-3" /> :
-                  user.role === "TEACHER" ? <User className="h-3 w-3" /> :
-                    <School className="h-3 w-3" />}
+              {user.role === "STUDENT" &&
+                user.grade &&
+                user.room &&
+                user.number && (
+                  <span>{`${user.grade}학년 ${user.room}반 ${user.number}번`}</span>
+                )}
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                  user.role === "STUDENT"
+                    ? "bg-[#4990FF]/10 text-[#4990FF]"
+                    : user.role === "TEACHER"
+                      ? "bg-emerald-50 text-emerald-600"
+                      : "bg-purple-50 text-purple-600"
+                )}
+              >
+                {user.role === "STUDENT" ? (
+                  <User className="h-3 w-3" />
+                ) : user.role === "TEACHER" ? (
+                  <User className="h-3 w-3" />
+                ) : (
+                  <School className="h-3 w-3" />
+                )}
                 {user.role}
               </span>
             </div>
@@ -111,7 +115,10 @@ export function AmountModal({ user, onClose }: AmountModalProps) {
 
           <form onSubmit={handleAmountSubmit} className="space-y-5">
             <div className="space-y-2">
-              <label htmlFor="amount" className="text-sm font-medium text-gray-700">
+              <label
+                htmlFor="amount"
+                className="text-sm font-medium text-gray-700"
+              >
                 충전 금액
               </label>
               <input
@@ -126,7 +133,9 @@ export function AmountModal({ user, onClose }: AmountModalProps) {
             </div>
 
             <div className="space-y-2">
-              <div className="text-sm font-medium text-gray-700">빠른 금액 선택</div>
+              <div className="text-sm font-medium text-gray-700">
+                빠른 금액 선택
+              </div>
               <div className="grid grid-cols-3 gap-2">
                 {AMOUNT_PRESETS.map((preset) => (
                   <button

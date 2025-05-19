@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Loader2, Store, ChevronDown, Search } from "lucide-react";
+import { Store, ChevronDown, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -40,36 +40,41 @@ const formatDateTime = (datetime: LocalDateTime) => {
     const [year, month, day, hour, minute] = datetime;
     const date = new Date(+year, +month - 1, +day, +hour, +minute);
     return {
-      date: format(date, 'MM.dd', { locale: ko }),
-      time: format(date, 'HH:mm', { locale: ko })
+      date: format(date, "MM.dd", { locale: ko }),
+      time: format(date, "HH:mm", { locale: ko }),
     };
   }
   const date = new Date(datetime);
   return {
-    date: format(date, 'MM.dd', { locale: ko }),
-    time: format(date, 'HH:mm', { locale: ko })
+    date: format(date, "MM.dd", { locale: ko }),
+    time: format(date, "HH:mm", { locale: ko }),
   };
 };
 
-const sortBooths = (booths: BoothType[], sortOption: SortOption): BoothType[] => {
+const sortBooths = (
+  booths: BoothType[],
+  sortOption: SortOption
+): BoothType[] => {
   return [...booths].sort((a, b) => {
     if (sortOption.field === "id") {
       const idA = parseInt(a.id);
       const idB = parseInt(b.id);
       return sortOption.order === "asc" ? idA - idB : idB - idA;
     } else if (sortOption.field === "name") {
-      return sortOption.order === "asc" 
-        ? a.name.localeCompare(b.name) 
+      return sortOption.order === "asc"
+        ? a.name.localeCompare(b.name)
         : b.name.localeCompare(a.name);
     } else {
-      return sortOption.order === "asc" ? a.totalSales - b.totalSales : b.totalSales - a.totalSales;
+      return sortOption.order === "asc"
+        ? a.totalSales - b.totalSales
+        : b.totalSales - a.totalSales;
     }
   });
 };
 
 export default function BoothsPage() {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedSort, setSelectedSort] = useState<SortOption>(sortOptions[0]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -78,26 +83,29 @@ export default function BoothsPage() {
     queryFn: async () => {
       const { data } = await api.get("/booths");
       return data;
-    }
+    },
   });
 
   const filteredAndSortedBooths = useMemo(() => {
     if (!booths) return [];
-    
+
     return sortBooths(
-      booths.filter(booth => 
-        !searchQuery.trim() || 
-        booth.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
-        booth.description.toLowerCase().includes(searchQuery.toLowerCase().trim())
+      booths.filter(
+        (booth) =>
+          !searchQuery.trim() ||
+          booth.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
+          booth.description
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase().trim())
       ),
       selectedSort
     );
   }, [booths, selectedSort, searchQuery]);
 
   const formatCurrency = (amount: number) => {
-    return amount.toLocaleString('ko-KR') + '원';
+    return amount.toLocaleString("ko-KR") + "원";
   };
-  
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-[960px] mx-auto px-5 py-6">
@@ -134,7 +142,7 @@ export default function BoothsPage() {
                 {selectedSort.label}
               </button>
               <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              
+
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg border border-gray-200 shadow-lg overflow-hidden z-10">
                   {sortOptions.map((option) => (
@@ -146,7 +154,9 @@ export default function BoothsPage() {
                       }}
                       className={cn(
                         "w-full px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors",
-                        selectedSort === option ? "text-[#4990FF] font-medium" : "text-gray-700"
+                        selectedSort === option
+                          ? "text-[#4990FF] font-medium"
+                          : "text-gray-700"
                       )}
                     >
                       {option.label}
@@ -163,10 +173,18 @@ export default function BoothsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">번호</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">부스명</th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-500">총 매출</th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-500">등록일시</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
+                    번호
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
+                    부스명
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-500">
+                    총 매출
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-500">
+                    등록일시
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -189,7 +207,10 @@ export default function BoothsPage() {
                   ))
                 ) : !filteredAndSortedBooths.length ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-24 text-center text-gray-500">
+                    <td
+                      colSpan={4}
+                      className="px-6 py-24 text-center text-gray-500"
+                    >
                       <Store className="w-8 h-8 mx-auto text-gray-400" />
                       <p className="mt-4">등록된 부스가 없습니다</p>
                     </td>
@@ -204,7 +225,9 @@ export default function BoothsPage() {
                         className="hover:bg-gray-50 cursor-pointer transition-colors group"
                       >
                         <td className="px-6 py-4">
-                          <span className="text-sm text-gray-500">#{booth.id}</span>
+                          <span className="text-sm text-gray-500">
+                            #{booth.id}
+                          </span>
                         </td>
                         <td className="px-6 py-4">
                           <div className="max-w-md">
@@ -217,16 +240,24 @@ export default function BoothsPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <span className={cn(
-                            "text-sm font-medium",
-                            selectedSort.field === "totalSales" ? "text-[#4990FF]" : "text-gray-900"
-                          )}>
+                          <span
+                            className={cn(
+                              "text-sm font-medium",
+                              selectedSort.field === "totalSales"
+                                ? "text-[#4990FF]"
+                                : "text-gray-900"
+                            )}
+                          >
                             {formatCurrency(booth.totalSales)}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <div className="text-sm text-gray-900">{datetime.date}</div>
-                          <div className="text-xs text-gray-500">{datetime.time}</div>
+                          <div className="text-sm text-gray-900">
+                            {datetime.date}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {datetime.time}
+                          </div>
                         </td>
                       </tr>
                     );
