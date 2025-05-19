@@ -38,7 +38,7 @@ const sortOptions: SortOption[] = [
 const formatDateTime = (datetime: LocalDateTime) => {
   if (Array.isArray(datetime)) {
     const [year, month, day, hour, minute] = datetime;
-    const date = new Date(+year, +month - 1, +day, +hour, +minute);
+    const date = new Date(+year, +month - 1, +day, +hour + 9, +minute);
     return {
       date: format(date, "MM.dd", { locale: ko }),
       time: format(date, "HH:mm", { locale: ko }),

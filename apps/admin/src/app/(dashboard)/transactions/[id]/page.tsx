@@ -41,7 +41,7 @@ interface TransactionType {
 const formatDateTime = (dateArr: number[]) => {
   if (!dateArr || dateArr.length < 6) return { date: '-', time: '-' };
   const [year, month, day, hour, minute, second] = dateArr;
-  const date = new Date(+year, +month - 1, +day, +hour, +minute, +second);
+  const date = new Date(+year, +month - 1, +day, +hour + 9, +minute, +second);
   return {
     date: format(date, 'yyyy.MM.dd', { locale: ko }),
     time: format(date, 'HH:mm:ss', { locale: ko })

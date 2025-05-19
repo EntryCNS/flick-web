@@ -41,7 +41,7 @@ interface PaginatedResponse {
 
 const formatDateTime = (dateArr: string[]) => {
   const [year, month, day, hour, minute, second] = dateArr;
-  const date = new Date(+year, +month - 1, +day, +hour, +minute, +second);
+  const date = new Date(+year, +month - 1, +day, +hour + 9, +minute, +second);
   return {
     date: format(date, "MM.dd", { locale: ko }),
     time: format(date, "HH:mm", { locale: ko }),
