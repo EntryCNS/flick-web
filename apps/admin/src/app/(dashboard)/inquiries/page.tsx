@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from 'react';
-import { Search, ChevronDown, ArrowLeft, ChevronRight } from 'lucide-react';
+import { Search, ChevronDown, ChevronRight, ChevronLeft } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
@@ -159,7 +159,7 @@ export default function InquiriesPage() {
               disabled={data.first}
               className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-40 hover:bg-gray-100 rounded-full transition-colors"
             >
-              <ArrowLeft size={18} />
+              <ChevronLeft size={18} />
             </button>
             
             {Array.from({ length: Math.min(5, data.totalPages) }, (_, i) => (
