@@ -112,10 +112,10 @@ export function ProductModal({
   useEffect(() => {
     if (stockValue === 0 && statusValue !== "SOLD_OUT") {
       setValue("status", "SOLD_OUT");
-      toast.info("재고가 0이므로 상품 상태가 품절로 변경되었습니다")
+      toast.info("재고가 0이므로 상품 상태가 품절로 변경되었습니다");
     } else if (stockValue > 0 && statusValue === "SOLD_OUT") {
       setValue("status", "AVAILABLE");
-      toast.info("재고가 있으므로 상품 상태가 판매중으로 변경되었습니다")
+      toast.info("재고가 있으므로 상품 상태가 판매중으로 변경되었습니다");
     }
 
     if (product) {
@@ -143,7 +143,7 @@ export function ProductModal({
         document.removeEventListener("keydown", handleEscape);
       };
     }
-  }, [product, onClose, reset, fullScreen]);
+  }, [product, onClose, reset, fullScreen, stockValue, statusValue, setValue]);
 
   const startCamera = async () => {
     setCameraError(null);
@@ -587,9 +587,7 @@ export function ProductModal({
       </div>
 
       <div className="space-y-2">
-        <Label className="text-sm font-medium text-gray-900">
-          상품 설명
-        </Label>
+        <Label className="text-sm font-medium text-gray-900">상품 설명</Label>
         <Textarea
           {...register("description")}
           placeholder="상품에 대한 설명을 입력하세요"

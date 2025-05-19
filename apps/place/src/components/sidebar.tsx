@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { BarChart3, FileText, Download, ShoppingBag } from "lucide-react";
+import { BarChart3, ShoppingBag } from "lucide-react";
 
 interface MenuItem {
   href: string;

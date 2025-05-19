@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { RefreshCw, Loader2, Filter } from "lucide-react";
+import { RefreshCw, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import api from "@/lib/api";
@@ -24,33 +24,38 @@ interface OrderResponse {
 }
 
 function OrderStatusBadge({ status }: { status: OrderStatus }) {
-  const statusConfig: Record<OrderStatus, { label: string; className: string }> = {
+  const statusConfig: Record<
+    OrderStatus,
+    { label: string; className: string }
+  > = {
     PENDING: {
       label: "대기중",
-      className: "bg-[#4990FF]/10 text-[#4990FF] border-[#4990FF]/20"
+      className: "bg-[#4990FF]/10 text-[#4990FF] border-[#4990FF]/20",
     },
     PAID: {
       label: "결제완료",
-      className: "bg-green-50 text-green-600 border-green-200"
+      className: "bg-green-50 text-green-600 border-green-200",
     },
     COMPLETED: {
       label: "처리완료",
-      className: "bg-blue-50 text-blue-600 border-blue-200"
+      className: "bg-blue-50 text-blue-600 border-blue-200",
     },
     CANCELED: {
       label: "숨김",
-      className: "bg-gray-50 text-gray-500 border-gray-200"
+      className: "bg-gray-50 text-gray-500 border-gray-200",
     },
     EXPIRED: {
       label: "만료됨",
-      className: "bg-red-50 text-red-600 border-red-200"
+      className: "bg-red-50 text-red-600 border-red-200",
     },
   };
 
   const config = statusConfig[status];
 
   return (
-    <span className={`text-xs px-2 py-1 rounded-full border ${config.className}`}>
+    <span
+      className={`text-xs px-2 py-1 rounded-full border ${config.className}`}
+    >
       {config.label}
     </span>
   );
@@ -61,7 +66,11 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "">("");
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
 
-  const { data: orders = [], isLoading, refetch } = useQuery<OrderResponse[]>({
+  const {
+    data: orders = [],
+    isLoading,
+    refetch,
+  } = useQuery<OrderResponse[]>({
     queryKey: ["orders"],
     queryFn: async () => {
       const { data } = await api.get<OrderResponse[]>("/orders");
@@ -78,7 +87,7 @@ export default function OrdersPage() {
   };
 
   const filteredOrders = orders
-    .filter(order => !statusFilter || order.status === statusFilter)
+    .filter((order) => !statusFilter || order.status === statusFilter)
     .sort((a, b) => {
       const dateA = new Date(a.createdAt).getTime();
       const dateB = new Date(b.createdAt).getTime();
@@ -88,7 +97,6 @@ export default function OrdersPage() {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-[960px] mx-auto px-5 py-6">
-        
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-medium text-gray-900">주문 관리</h1>
@@ -111,7 +119,9 @@ export default function OrdersPage() {
           <div className="flex items-center gap-2">
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as OrderStatus | "")}
+              onChange={(e) =>
+                setStatusFilter(e.target.value as OrderStatus | "")
+              }
               className="h-9 px-3 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4990FF]/20 focus:border-[#4990FF]"
             >
               <option value="">모든 상태</option>
@@ -124,7 +134,9 @@ export default function OrdersPage() {
           </div>
 
           <Button
-            onClick={() => setSortDirection(prev => prev === "ASC" ? "DESC" : "ASC")}
+            onClick={() =>
+              setSortDirection((prev) => (prev === "ASC" ? "DESC" : "ASC"))
+            }
             variant="outline"
             className="h-9 px-4 text-sm border-gray-200 hover:bg-gray-100"
           >
@@ -142,12 +154,24 @@ export default function OrdersPage() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">주문번호</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">키오스크번호</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">상태</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">주문금액</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">주문일시</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">만료일시</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
+                      주문번호
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
+                      키오스크번호
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
+                      상태
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
+                      주문금액
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
+                      주문일시
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500">
+                      만료일시
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -158,7 +182,9 @@ export default function OrdersPage() {
                       className="hover:bg-gray-50 cursor-pointer group"
                     >
                       <td className="px-6 py-4">
-                        <span className="text-sm text-gray-500">#{order.id}</span>
+                        <span className="text-sm text-gray-500">
+                          #{order.id}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-900 group-hover:text-[#4990FF]">
