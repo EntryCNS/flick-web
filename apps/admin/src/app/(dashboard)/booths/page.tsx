@@ -81,7 +81,7 @@ export default function BoothsPage() {
   const { data: booths, isLoading } = useQuery<BoothType[]>({
     queryKey: ["booths"],
     queryFn: async () => {
-      const { data } = await api.get("/booths");
+      const { data } = await api.get("/booths?status=approved");
       return data;
     },
   });
