@@ -9,6 +9,7 @@ import { ko } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import axios from 'axios';
 
 interface Notice {
   id: number;
@@ -43,8 +44,14 @@ export default function NoticesPage() {
       toast.success('공지사항이 삭제되었습니다');
       queryClient.invalidateQueries({ queryKey: ['notices'] });
     },
-    onError: () => {
-      toast.error('삭제 중 오류가 발생했습니다');
+    onError: (error) => {
+      if (axios.isAxiosError(error) && error.response?.status === 403) {
+        toast.error("해당 공지사항을 삭제할 권한이 없습니다.");
+      } else if (axios.isAxiosError(error) && error.response?.status === 401) {
+        toast.error("로그인이 만료되었습니다. 다시 로그인해주세요.");
+      } else {
+        toast.error("삭제 중 오류가 발생했습니다");
+      }
     }
   });
 
@@ -174,7 +181,7 @@ export default function NoticesPage() {
             >
               <ChevronLeft size={18} />
             </button>
-            
+
             {pageNumbers.map(number => (
               <button
                 key={number}
