@@ -54,9 +54,6 @@ export default function PlaceDashboard() {
         {/* 헤더 */}
         <div className="flex items-center gap-3 mb-8">
           <h1 className="text-xl font-medium text-gray-900">대시보드</h1>
-          <div className="flex items-center h-7 px-2 bg-[#4990FF]/10 rounded">
-            <span className="text-xs font-medium text-[#4990FF]">실시간</span>
-          </div>
         </div>
 
         {/* 통계 카드 영역 */}

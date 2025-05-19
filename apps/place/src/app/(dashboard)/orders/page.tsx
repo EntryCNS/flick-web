@@ -7,6 +7,7 @@ import dayjs from "dayjs";
 import api from "@/lib/api";
 import OrderDetailModal from "@/components/order/OrderDetailModal";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 type OrderStatus = "PENDING" | "PAID" | "COMPLETED" | "CANCELED" | "EXPIRED";
 
@@ -62,6 +63,7 @@ function OrderStatusBadge({ status }: { status: OrderStatus }) {
 }
 
 export default function OrdersPage() {
+  const router = useRouter();
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "">("");
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
@@ -79,7 +81,7 @@ export default function OrdersPage() {
   });
 
   const handleViewDetails = (orderId: number): void => {
-    setSelectedOrderId(orderId);
+    router.push(`/orders/${orderId}`)
   };
 
   const handleCloseModal = (): void => {
@@ -99,20 +101,13 @@ export default function OrdersPage() {
       <div className="max-w-[960px] mx-auto px-5 py-6">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-medium text-gray-900">주문 관리</h1>
+            <h1 className="text-xl font-medium text-gray-900">주문 목록</h1>
             <div className="flex items-center h-7 px-2 bg-[#4990FF]/10 rounded">
               <span className="text-xs font-medium text-[#4990FF]">
                 총 {filteredOrders.length}건
               </span>
             </div>
           </div>
-          <Button
-            onClick={() => refetch()}
-            className="h-9 px-4 bg-[#4990FF] hover:bg-[#4990FF]/90 text-white text-sm"
-          >
-            <RefreshCw className="w-4 h-4 mr-1.5" />
-            새로고침
-          </Button>
         </div>
 
         <div className="flex items-center justify-between gap-3 mb-4">
@@ -178,8 +173,8 @@ export default function OrdersPage() {
                   {filteredOrders.map((order) => (
                     <tr
                       key={order.id}
-                      onClick={() => handleViewDetails(order.id)}
-                      className="hover:bg-gray-50 cursor-pointer group"
+                      // onClick={() => handleViewDetails(order.id)}
+                      className="hover:bg-gray-50 group"
                     >
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-500">

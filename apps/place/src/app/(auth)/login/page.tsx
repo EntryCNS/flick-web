@@ -84,7 +84,7 @@ export default function LoginPage() {
     }
   };
 
-  const login = async (data: LoginFormData) => {
+  const login = async (data: LoginFormData): Promise<void> => {
     setIsSubmitting(true);
     try {
       const response = await api.post<LoginResponse>("/auth/login", data);

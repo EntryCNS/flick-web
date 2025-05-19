@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { BarChart3, ShoppingBag } from "lucide-react";
+import { BarChart3, ShoppingBag, FileText } from "lucide-react";
 
 interface MenuItem {
   href: string;
@@ -27,7 +27,7 @@ const MENUS: MenuSection[] = [
         label: "매출현황",
       },
       // {
-      //   href: "/sales/history",
+      //   href: "/sales",
       //   icon: <FileText size={18} className="text-[#F03E3E]" />,
       //   label: "판매내역",
       // },
