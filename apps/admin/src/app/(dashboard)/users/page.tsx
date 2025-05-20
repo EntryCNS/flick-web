@@ -46,7 +46,7 @@ interface FilterGroupType {
   options: string[];
 }
 
-const ITEMS_PER_PAGE = 15; // 페이지당 아이템 수 증가
+const ITEMS_PER_PAGE = 1000; // 페이지당 아이템 수 증가
 
 export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
