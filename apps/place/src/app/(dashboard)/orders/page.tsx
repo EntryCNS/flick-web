@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { RefreshCw, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import api from "@/lib/api";
 import OrderDetailModal from "@/components/order/OrderDetailModal";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 
 type OrderStatus = "PENDING" | "PAID" | "COMPLETED" | "CANCELED" | "EXPIRED";
 
@@ -63,26 +62,17 @@ function OrderStatusBadge({ status }: { status: OrderStatus }) {
 }
 
 export default function OrdersPage() {
-  const router = useRouter();
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "">("");
   const [sortDirection, setSortDirection] = useState<"ASC" | "DESC">("DESC");
 
-  const {
-    data: orders = [],
-    isLoading,
-    refetch,
-  } = useQuery<OrderResponse[]>({
+  const { data: orders = [], isLoading } = useQuery<OrderResponse[]>({
     queryKey: ["orders"],
     queryFn: async () => {
       const { data } = await api.get<OrderResponse[]>("/orders");
       return data;
     },
   });
-
-  const handleViewDetails = (orderId: number): void => {
-    router.push(`/orders/${orderId}`)
-  };
 
   const handleCloseModal = (): void => {
     setSelectedOrderId(null);
@@ -171,11 +161,7 @@ export default function OrdersPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {filteredOrders.map((order) => (
-                    <tr
-                      key={order.id}
-                      // onClick={() => handleViewDetails(order.id)}
-                      className="hover:bg-gray-50 group"
-                    >
+                    <tr key={order.id} className="hover:bg-gray-50 group">
                       <td className="px-6 py-4">
                         <span className="text-sm text-gray-500">
                           #{order.id}

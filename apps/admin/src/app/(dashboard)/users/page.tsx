@@ -46,7 +46,7 @@ interface FilterGroupType {
   options: string[];
 }
 
-const ITEMS_PER_PAGE = 1000; // 페이지당 아이템 수 증가
+const ITEMS_PER_PAGE = 1000;
 
 export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -78,21 +78,18 @@ export default function UsersPage() {
 
   const handleFilterAdd = (category: string, value: string) => {
     setActiveFilters((prev) => {
-      // 이미 해당 카테고리가 있는지 확인
       const existingFilterIndex = prev.findIndex(
         (filter) => filter.category === category
       );
 
       if (existingFilterIndex >= 0) {
-        // 이미 해당 카테고리가 있으면 값만 추가
         const newFilters = [...prev];
-        // 이미 해당 값이 있는지 확인하고, 없으면 추가
+
         if (!newFilters[existingFilterIndex].value.includes(value)) {
           newFilters[existingFilterIndex].value.push(value);
         }
         return newFilters;
       } else {
-        // 해당 카테고리가 없으면 새로 추가
         return [...prev, { category, value: [value] }];
       }
     });
@@ -104,14 +101,12 @@ export default function UsersPage() {
     setActiveFilters((prev) => {
       const newFilters = prev.map((filter) => {
         if (filter.category === category) {
-          // 해당 값만 제거
           const newValues = filter.value.filter((v) => v !== value);
           return { ...filter, value: newValues };
         }
         return filter;
       });
 
-      // 값이 없는 필터는 제거
       return newFilters.filter((filter) => filter.value.length > 0);
     });
     setCurrentPage(1);

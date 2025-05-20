@@ -160,19 +160,17 @@ export function ProductModal({
     } else {
       isFirstRenderRef.current = false;
     }
-  }, [stockValue, statusValue, setValue, initialized])
+  }, [stockValue, statusValue, setValue, initialized]);
 
   const startCamera = async () => {
     setCameraError(null);
     setCameraReady(false);
 
     try {
-      // 이미 스트림이 있다면 정리
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
       }
 
-      // 새 스트림 시작
       const constraints = {
         video: true,
         audio: false,
@@ -183,7 +181,6 @@ export function ProductModal({
         await navigator.mediaDevices.getUserMedia(constraints);
       console.log("카메라 스트림 받음:", mediaStream);
 
-      // 비디오 트랙 확인
       const videoTracks = mediaStream.getVideoTracks();
       console.log("비디오 트랙:", videoTracks);
 
@@ -191,17 +188,14 @@ export function ProductModal({
         throw new Error("비디오 트랙이 없습니다");
       }
 
-      // 스트림 설정
       setStream(mediaStream);
       setShowCamera(true);
 
-      // 지연 후 비디오 요소에 스트림 설정 (DOM이 완전히 렌더링되도록)
       setTimeout(() => {
         if (videoRef.current) {
           console.log("비디오 요소에 스트림 설정");
           videoRef.current.srcObject = mediaStream;
 
-          // 비디오가 로드되면 재생 시작
           videoRef.current.onloadedmetadata = () => {
             console.log("비디오 메타데이터 로드됨");
             if (videoRef.current) {
@@ -247,7 +241,6 @@ export function ProductModal({
       const video = videoRef.current;
       const canvas = canvasRef.current;
 
-      // 비디오 요소의 현재 표시 크기로 캔버스 설정
       const videoWidth = video.videoWidth;
       const videoHeight = video.videoHeight;
 
@@ -258,7 +251,6 @@ export function ProductModal({
         return;
       }
 
-      // 캔버스 설정
       canvas.width = videoWidth;
       canvas.height = videoHeight;
 
@@ -268,10 +260,8 @@ export function ProductModal({
         return;
       }
 
-      // 비디오 프레임을 캔버스에 그리기
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // 캔버스 내용을 데이터 URL로 변환
       const photoData = canvas.toDataURL("image/jpeg", 0.9);
       console.log("이미지 캡처됨");
 
@@ -284,7 +274,6 @@ export function ProductModal({
     }
   };
 
-  // 컴포넌트 언마운트 시 카메라 정리
   useEffect(() => {
     return () => {
       if (stream) {
@@ -506,8 +495,9 @@ export function ProductModal({
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
-                className={`absolute inset-0 w-full h-full opacity-0 cursor-pointer ${previewImage ? "pointer-events-none" : ""
-                  }`}
+                className={`absolute inset-0 w-full h-full opacity-0 cursor-pointer ${
+                  previewImage ? "pointer-events-none" : ""
+                }`}
               />
             </div>
 
